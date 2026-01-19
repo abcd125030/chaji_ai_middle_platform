@@ -1,0 +1,640 @@
+# 开发指南
+
+本指南涵盖了企业级AI中台平台的完整开发流程，包括环境配置、开发规范、测试策略等。
+
+## 开发环境配置
+
+### 前置要求
+
+#### 系统要求
+- **操作系统**：Linux/macOS/Windows (推荐 Ubuntu 20.04+)
+- **内存**：8GB+ (推荐 16GB)
+- **存储空间**：50GB+ 可用空间
+- **网络**：稳定的互联网连接
+
+#### 必需软件
+```bash
+# Node.js (推荐使用 nvm 管理版本)
+curl -o- https://raw.githubusercontent.com/nvm-sh/nvm/v0.39.0/install.sh | bash
+nvm install 18
+nvm use 18
+
+# Python (推荐使用 pyenv 管理版本)
+curl https://pyenv.run | bash
+pyenv install 3.9.16
+pyenv global 3.9.16
+
+# PostgreSQL
+sudo apt-get install postgresql postgresql-contrib
+
+# Redis
+sudo apt-get install redis-server
+
+# Git
+sudo apt-get install git
+```
+
+### 项目设置
+
+#### 1. 克隆代码库
+```bash
+git clone https://github.com/your-org/ai-platform.git
+cd ai-platform
+```
+
+#### 2. 前端环境配置
+```bash
+cd web
+
+# 安装 pnpm (全局)
+npm install -g pnpm
+
+# 安装依赖
+pnpm install
+
+# 配置环境变量
+cp .env.example .env.local
+# 编辑 .env.local 文件，配置必要的环境变量
+
+# 启动开发服务器
+pnpm dev
+```
+
+#### 3. 后端环境配置
+```bash
+cd backend
+
+# 创建虚拟环境
+python -m venv .venv
+source .venv/bin/activate  # Windows: .venv\Scripts\activate
+
+# 安装依赖
+pip install -r requirements.txt
+
+# 配置环境变量
+cp .env.example .env
+# 编辑 .env 文件
+
+# 数据库迁移
+python manage.py migrate
+
+# 创建超级用户
+python manage.py createsuperuser
+
+# 启动开发服务器
+python manage.py runserver
+```
+
+#### 4. 数据库初始化
+```bash
+# PostgreSQL 配置
+sudo -u postgres psql
+postgres=# CREATE DATABASE ai_platform_dev;
+postgres=# CREATE USER dev_user WITH PASSWORD 'dev_password';
+postgres=# GRANT ALL PRIVILEGES ON DATABASE ai_platform_dev TO dev_user;
+postgres=# \q
+
+# Redis 配置
+sudo systemctl start redis-server
+sudo systemctl enable redis-server
+```
+
+## 开发规范
+
+### 代码风格
+
+#### Python (后端)
+```python
+# 遵循 PEP 8 规范
+# 使用中文注释
+
+class ChatSession(models.Model):
+    """聊天会话模型"""
+    id = models.UUIDField('会话ID', primary_key=True, default=uuid.uuid4)
+    user_id = models.CharField('用户ID', max_length=255)
+    title = models.CharField('会话标题', max_length=500, blank=True)
+    created_at = models.DateTimeField('创建时间', auto_now_add=True)
+    
+    class Meta:
+        verbose_name = '聊天会话'
+        verbose_name_plural = '聊天会话'
+        ordering = ['-created_at']
+
+    def __str__(self):
+        return f"{self.title} ({self.user_id})"
+
+# 服务层抽象
+class ChatService:
+    """聊天服务层"""
+    
+    @staticmethod
+    def create_session(user_id: str, title: str = "") -> ChatSession:
+        """创建新的聊天会话"""
+        return ChatSession.objects.create(
+            user_id=user_id,
+            title=title or f"会话_{timezone.now().strftime('%Y%m%d_%H%M%S')}"
+        )
+```
+
+#### TypeScript (前端)
+```typescript
+// 使用严格的类型定义
+interface ChatSession {
+  id: string;
+  title: string;
+  userId: string;
+  createdAt: string;
+  updatedAt: string;
+}
+
+// React 组件规范
+interface ChatComponentProps {
+  session: ChatSession;
+  onSendMessage: (content: string) => void;
+}
+
+export default function ChatComponent({ 
+  session, 
+  onSendMessage 
+}: ChatComponentProps) {
+  const [message, setMessage] = useState<string>('');
+
+  const handleSubmit = async (e: FormEvent) => {
+    e.preventDefault();
+    if (!message.trim()) return;
+    
+    try {
+      await onSendMessage(message);
+      setMessage('');
+    } catch (error) {
+      console.error('发送消息失败:', error);
+      toast.error('发送消息失败，请重试');
+    }
+  };
+
+  return (
+    <form onSubmit={handleSubmit} className="flex gap-2 p-4">
+      <input
+        type="text"
+        value={message}
+        onChange={(e) => setMessage(e.target.value)}
+        placeholder="输入消息..."
+        className="flex-1 border rounded-lg px-3 py-2"
+      />
+      <button
+        type="submit"
+        disabled={!message.trim()}
+        className="px-4 py-2 bg-blue-500 text-white rounded-lg disabled:opacity-50"
+      >
+        发送
+      </button>
+    </form>
+  );
+}
+```
+
+### 提交规范
+
+使用 [Conventional Commits](https://www.conventionalcommits.org/) 规范：
+
+```bash
+# 格式: type(scope): description
+
+# 新功能
+git commit -m "feat(chat): 添加文件上传功能"
+
+# 修复问题  
+git commit -m "fix(api): 修复会话创建时的空指针异常"
+
+# 文档更新
+git commit -m "docs(api): 更新认证接口文档"
+
+# 样式调整
+git commit -m "style(ui): 优化聊天界面布局"
+
+# 重构代码
+git commit -m "refactor(service): 重构用户服务层逻辑"
+
+# 性能优化
+git commit -m "perf(db): 优化数据库查询性能"
+
+# 测试相关
+git commit -m "test(chat): 增加聊天功能单元测试"
+
+# 构建配置
+git commit -m "chore(deps): 升级依赖版本"
+```
+
+### 分支管理
+
+```bash
+# 主分支
+main        # 生产环境分支
+develop     # 开发环境分支（当前活跃）
+
+# 功能分支
+feature/chat-file-upload      # 聊天文件上传功能
+feature/knowledge-search      # 知识库搜索功能
+feature/user-management       # 用户管理功能
+
+# 修复分支  
+fix/session-timeout          # 修复会话超时问题
+fix/file-upload-error        # 修复文件上传错误
+
+# 热修复分支
+hotfix/critical-security-fix  # 紧急安全修复
+
+# 工作流程
+git checkout develop
+git pull origin develop
+git checkout -b feature/new-feature
+# 开发完成后
+git push origin feature/new-feature
+# 创建 Pull Request 到 develop 分支
+```
+
+## 测试策略
+
+### 前端测试
+
+#### 单元测试 (Jest + Testing Library)
+```typescript
+// components/__tests__/ChatInput.test.tsx
+import { render, screen, fireEvent, waitFor } from '@testing-library/react';
+import ChatInput from '../ChatInput';
+
+describe('ChatInput', () => {
+  const mockOnSend = jest.fn();
+
+  beforeEach(() => {
+    mockOnSend.mockClear();
+  });
+
+  test('应该渲染输入框和发送按钮', () => {
+    render(<ChatInput onSend={mockOnSend} />);
+    
+    expect(screen.getByPlaceholderText('输入消息...')).toBeInTheDocument();
+    expect(screen.getByText('发送')).toBeInTheDocument();
+  });
+
+  test('发送按钮在输入为空时应该被禁用', () => {
+    render(<ChatInput onSend={mockOnSend} />);
+    
+    const button = screen.getByText('发送');
+    expect(button).toBeDisabled();
+  });
+
+  test('输入消息后点击发送应该调用 onSend', async () => {
+    render(<ChatInput onSend={mockOnSend} />);
+    
+    const input = screen.getByPlaceholderText('输入消息...');
+    const button = screen.getByText('发送');
+
+    fireEvent.change(input, { target: { value: '测试消息' } });
+    fireEvent.click(button);
+
+    await waitFor(() => {
+      expect(mockOnSend).toHaveBeenCalledWith('测试消息');
+    });
+  });
+});
+
+# 运行测试
+pnpm test
+```
+
+#### E2E 测试 (Playwright)
+```typescript
+// e2e/chat.spec.ts
+import { test, expect } from '@playwright/test';
+
+test.describe('聊天功能', () => {
+  test('用户应该能够发送消息', async ({ page }) => {
+    await page.goto('/chat');
+    
+    // 输入消息
+    await page.fill('[placeholder="输入消息..."]', '你好，AI助手');
+    
+    // 点击发送
+    await page.click('text=发送');
+    
+    // 验证消息显示
+    await expect(page.locator('text=你好，AI助手')).toBeVisible();
+    
+    // 等待 AI 响应
+    await expect(page.locator('.ai-message')).toBeVisible({ timeout: 10000 });
+  });
+
+  test('用户应该能够上传文件', async ({ page }) => {
+    await page.goto('/chat');
+    
+    // 上传文件
+    const fileChooser = await page.waitForEvent('filechooser');
+    await page.click('[data-testid="file-upload"]');
+    await fileChooser.setFiles('test-files/document.pdf');
+    
+    // 验证文件显示
+    await expect(page.locator('text=document.pdf')).toBeVisible();
+  });
+});
+
+# 运行 E2E 测试
+pnpm playwright test
+```
+
+### 后端测试
+
+#### 单元测试 (Django Test)
+```python
+# tests/test_chat_service.py
+from django.test import TestCase
+from django.contrib.auth import get_user_model
+from chat_sessions.services import ChatService
+from chat_sessions.models import ChatSession, Message
+
+User = get_user_model()
+
+class ChatServiceTest(TestCase):
+    def setUp(self):
+        """测试初始化"""
+        self.user = User.objects.create_user(
+            username='testuser',
+            email='test@example.com'
+        )
+
+    def test_create_session(self):
+        """测试创建会话"""
+        session = ChatService.create_session(
+            user_id=str(self.user.id),
+            title='测试会话'
+        )
+        
+        self.assertIsInstance(session, ChatSession)
+        self.assertEqual(session.user_id, str(self.user.id))
+        self.assertEqual(session.title, '测试会话')
+
+    def test_send_message(self):
+        """测试发送消息"""
+        session = ChatService.create_session(user_id=str(self.user.id))
+        
+        message = ChatService.send_message(
+            session_id=session.id,
+            role='user',
+            content='Hello, AI!'
+        )
+        
+        self.assertIsInstance(message, Message)
+        self.assertEqual(message.session_id, session.id)
+        self.assertEqual(message.content, 'Hello, AI!')
+        self.assertEqual(message.role, 'user')
+
+# 运行测试
+python manage.py test
+```
+
+#### API 测试 (Django REST Framework Test)
+```python
+# tests/test_chat_api.py
+from rest_framework.test import APITestCase
+from rest_framework import status
+from django.contrib.auth import get_user_model
+from rest_framework_simplejwt.tokens import RefreshToken
+
+User = get_user_model()
+
+class ChatAPITest(APITestCase):
+    def setUp(self):
+        self.user = User.objects.create_user(
+            username='testuser',
+            email='test@example.com',
+            password='testpass123'
+        )
+        refresh = RefreshToken.for_user(self.user)
+        self.client.credentials(
+            HTTP_AUTHORIZATION=f'Bearer {refresh.access_token}'
+        )
+
+    def test_create_session(self):
+        """测试创建会话 API"""
+        url = '/api/chat/sessions/'
+        data = {'title': '测试会话'}
+        
+        response = self.client.post(url, data, format='json')
+        
+        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
+        self.assertEqual(response.data['status'], 'success')
+        self.assertIn('id', response.data['data'])
+
+    def test_send_message(self):
+        """测试发送消息 API"""
+        # 先创建会话
+        session_response = self.client.post(
+            '/api/chat/sessions/',
+            {'title': '测试会话'},
+            format='json'
+        )
+        session_id = session_response.data['data']['id']
+        
+        # 发送消息
+        url = f'/api/chat/sessions/{session_id}/messages/'
+        data = {'content': 'Hello, AI!'}
+        
+        response = self.client.post(url, data, format='json')
+        
+        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
+        self.assertEqual(response.data['status'], 'success')
+```
+
+## 调试技巧
+
+### 前端调试
+
+#### 浏览器开发者工具
+```typescript
+// 使用 console.log 进行调试
+console.log('用户会话数据:', sessions);
+console.error('API 调用失败:', error);
+
+// 使用 debugger 断点
+function handleSendMessage(content: string) {
+  debugger; // 浏览器会在此处暂停
+  onSendMessage(content);
+}
+
+// React DevTools 组件检查
+// 安装 React Developer Tools 浏览器扩展
+```
+
+#### Next.js 开发工具
+```bash
+# 启用详细日志
+DEBUG=* pnpm dev
+
+# 分析构建包大小
+pnpm build --analyze
+
+# 检查 TypeScript 类型
+pnpm type-check
+```
+
+### 后端调试
+
+#### Django Debug Toolbar
+```python
+# settings/development.py
+if DEBUG:
+    INSTALLED_APPS += ['debug_toolbar']
+    MIDDLEWARE += ['debug_toolbar.middleware.DebugToolbarMiddleware']
+    
+    INTERNAL_IPS = ['127.0.0.1', '::1']
+    
+    DEBUG_TOOLBAR_CONFIG = {
+        'DISABLE_PANELS': ['debug_toolbar.panels.redirects.RedirectsPanel'],
+        'SHOW_TEMPLATE_CONTEXT': True,
+    }
+```
+
+#### 日志调试
+```python
+import logging
+logger = logging.getLogger('django')
+
+def process_message(message_data):
+    logger.info(f"处理消息: {message_data}")
+    
+    try:
+        result = some_operation(message_data)
+        logger.debug(f"操作结果: {result}")
+        return result
+    except Exception as e:
+        logger.error(f"处理消息时发生错误: {str(e)}", exc_info=True)
+        raise
+```
+
+#### pdb 断点调试
+```python
+import pdb
+
+def complex_function(data):
+    pdb.set_trace()  # 程序会在此处暂停
+    
+    processed_data = process_data(data)
+    return processed_data
+
+# 使用 ipdb 获得更好的调试体验
+import ipdb
+ipdb.set_trace()
+```
+
+## 性能优化
+
+### 前端性能优化
+```typescript
+// 1. 懒加载组件
+const LazyChart = lazy(() => import('./Chart'));
+
+// 2. 使用 useMemo 缓存计算结果
+const expensiveValue = useMemo(() => {
+  return heavyCalculation(data);
+}, [data]);
+
+// 3. 使用 useCallback 缓存函数
+const handleClick = useCallback((id: string) => {
+  onItemClick(id);
+}, [onItemClick]);
+
+// 4. 虚拟滚动长列表
+import { FixedSizeList as List } from 'react-window';
+
+const VirtualList = ({ items }) => (
+  <List
+    height={600}
+    itemCount={items.length}
+    itemSize={50}
+  >
+    {({ index, style }) => (
+      <div style={style}>
+        {items[index]}
+      </div>
+    )}
+  </List>
+);
+```
+
+### 后端性能优化
+```python
+# 1. 数据库查询优化
+class MessageViewSet(ViewSet):
+    def list(self, request, session_id):
+        messages = Message.objects.filter(session_id=session_id)\
+                                 .select_related('session')\
+                                 .prefetch_related('files')\
+                                 .order_by('-created_at')[:50]
+        return Response(MessageSerializer(messages, many=True).data)
+
+# 2. 缓存策略
+from django.core.cache import cache
+
+def get_user_sessions(user_id):
+    cache_key = f"user_sessions:{user_id}"
+    sessions = cache.get(cache_key)
+    
+    if sessions is None:
+        sessions = ChatSession.objects.filter(user_id=user_id)
+        cache.set(cache_key, sessions, 300)  # 缓存 5 分钟
+    
+    return sessions
+
+# 3. 异步任务
+from celery import shared_task
+
+@shared_task
+def process_large_file(file_id):
+    """异步处理大文件"""
+    file_obj = File.objects.get(id=file_id)
+    # 处理逻辑...
+    file_obj.status = 'processed'
+    file_obj.save()
+```
+
+## 部署准备
+
+### 环境变量配置
+```bash
+# .env.production (后端)
+DEBUG=False
+SECRET_KEY=your-super-secret-key
+DATABASE_URL=postgresql://user:pass@localhost:5432/ai_platform
+REDIS_URL=redis://localhost:6379/0
+ALLOWED_HOSTS=your-domain.com
+
+# .env.production (前端)
+NEXT_PUBLIC_API_BASE_URL=https://api.your-domain.com
+NEXT_PUBLIC_APP_ENV=production
+```
+
+### 构建优化
+```json
+// package.json (前端)
+{
+  "scripts": {
+    "build": "next build",
+    "build:analyze": "ANALYZE=true next build",
+    "start": "next start -p 3000"
+  }
+}
+```
+
+```python
+# requirements/production.txt (后端)
+gunicorn==20.1.0
+daphne==4.0.0
+psycopg2-binary==2.9.5
+redis==4.5.1
+celery==5.2.7
+sentry-sdk==1.14.0  # 错误监控
+```
+
+---
+
+*遵循这些开发规范和最佳实践，可以确保代码质量、团队协作效率和系统稳定性。*

@@ -1,0 +1,21 @@
+[Unit]
+Description=Celery Gevent Workers
+After=network.target postgresql.service pgbouncer.service redis.service
+Wants=postgresql.service pgbouncer.service redis.service
+
+[Service]
+Type=forking
+User=root
+Group=root
+WorkingDirectory=/www/wwwroot/repos/X/backend
+Environment="PATH=/www/wwwroot/repos/X/backend/.venv/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin"
+ExecStart=/www/wwwroot/repos/X/backend/prod_start_celery_gevent.sh
+ExecStop=/www/wwwroot/repos/X/backend/prod_stop_all_celery_workers.sh
+ExecReload=/bin/bash -c '/www/wwwroot/repos/X/backend/prod_stop_all_celery_workers.sh && sleep 2 && /www/wwwroot/repos/X/backend/prod_start_celery_gevent.sh'
+Restart=on-failure
+RestartSec=5s
+StandardOutput=append:/www/wwwroot/repos/X/backend/celery_logs/systemd.log
+StandardError=append:/www/wwwroot/repos/X/backend/celery_logs/systemd_error.log
+
+[Install]
+WantedBy=multi-user.target

@@ -1,0 +1,101 @@
+# Django 核心框架
+Django>=5.1.0,<6.0.0
+djangorestframework>=3.14.0
+django-cors-headers>=4.3.0
+django-rename-app>=0.1.7  # Django 应用重命名工具
+django_celery_results>=2.6.0  # Celery 结果后端
+django-db-connection-pool>=1.2.5  # 数据库连接池
+django-jazzmin>=3.0.0  # Django Admin 美化主题
+
+# 认证
+djangorestframework-simplejwt>=5.3.0
+PyJWT>=2.10.0
+
+# 数据库
+psycopg>=3.2.0  # PostgreSQL 适配器
+psycopg-binary>=3.2.0
+redis>=5.2.0
+django-redis>=5.4.0
+
+# 异步任务
+celery>=5.5.0
+gevent>=25.5.1
+
+# HTTP 请求
+requests>=2.31.0
+
+# 数据验证
+pydantic>=2.11.0
+
+# 环境配置
+python-dotenv>=1.0.0
+
+# Web 服务器
+gunicorn>=23.0.0
+uvicorn>=0.34.0  # ASGI worker for gunicorn
+daphne>=4.1.0  # ASGI 服务器，socket_handler 需要
+
+# 基础数据处理（很多功能依赖这个）
+pandas>=2.2.0
+numpy>=1.21.0
+openpyxl>=3.1.0  # Excel 支持
+
+# LLM 相关（项目必需）
+tiktoken>=0.9.0
+openai>=1.0.0
+langchain>=0.3.0
+langchain-openai>=0.3.0
+
+# 加密解密
+pycryptodome>=3.22.0
+
+# 向量数据库和记忆系统
+# mem0ai>=0.1.0  # 已被 LangChain 替代
+qdrant-client>=1.14.0
+langchain-qdrant>=0.2.0
+langchain-community>=0.3.0
+chromadb>=0.4.0  # 备用向量存储，开发环境使用（暂未集成到service）
+
+# 文件类型检测
+filetype>=1.2.0
+
+# PDF 处理
+PyMuPDF>=1.24.0  # PDF 文档处理库（fitz），用于 PDF 提取器
+mineru>=2.2.2  # 安装完整版，包含所有依赖
+doclayout_yolo  # MinerU 2.2.2 的依赖项
+ultralytics     # YOLO 模型框架，doclayout_yolo 的依赖
+transformers    # Hugging Face Transformers，用于深度学习模型
+ftfy            # 修复文本编码问题，CLIP 模型依赖
+shapely         # 几何形状处理，用于布局分析
+pyclipper       # 多边形裁剪和偏移操作
+omegaconf       # 配置管理框架
+
+# 文档处理
+python-docx>=1.1.0  # document_parser.py 处理 .docx 文件
+pdfplumber>=0.11.0  # pdf_parser_internal.py 的备用解析方案
+PyPDF2>=3.0.0  # pdf_parser_internal.py 的降级解析方案
+
+# 深度学习框架（可选，MinerU GPU加速需要）
+torch==2.5.1
+torchvision==0.20.1
+torchaudio==2.5.1
+
+# 终端交互
+pexpect>=4.9.0
+
+# 图片处理
+Pillow>=10.0.0  # image_editor 图片验证需要
+
+whitenoise>=6.6.0  # 静态文件服务中间件
+
+# 阿里云OSS
+oss2==2.19.1
+
+# 飞书开放平台 SDK
+lark-oapi>=1.3.0
+
+# 测试框架
+pytest>=8.0.0
+pytest-django>=4.5.0
+pytest-mock>=3.12.0
+pytest-cov>=4.1.0

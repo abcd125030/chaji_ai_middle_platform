@@ -1,0 +1,151 @@
+<svg width="200" height="200" viewBox="0 0 200 200" xmlns="http://www.w3.org/2000/svg">
+  <!-- 杯身轮廓（上大下小的倒梯形） -->
+  <path d="M 70 60 L 74.5 171 L 125.5 171 L 130 60 Z" 
+        fill="none" 
+        stroke="#333" 
+        stroke-width="2"/>
+  
+  <!-- 杯盖轮廓（独立的封闭形状，比杯口略宽） -->
+  <path d="M 65 50 L 65 60 L 135 60 L 135 50 Z" 
+        fill="none" 
+        stroke="#333" 
+        stroke-width="2"/>
+  
+  <!-- 吸管轮廓 -->
+  <rect x="113" y="25" width="8" height="25" 
+        fill="none" 
+        stroke="#333" 
+        stroke-width="2"/>
+  
+  <!-- CHAGEE 文字 -->
+  <text x="100" y="110" 
+        text-anchor="middle" 
+        font-family="Arial Black, sans-serif" 
+        font-weight="900" 
+        font-size="10" 
+        fill="#333">CHAGEE</text>
+  
+  <!-- 泡泡动画 -->
+  <g id="bubbles">
+    <!-- 泡泡1 -->
+    <circle r="3" fill="#333" opacity="0">
+      <animate attributeName="cy" 
+               values="171;60" 
+               dur="1.5s" 
+               repeatCount="indefinite"/>
+      <animate attributeName="cx" 
+               values="80;82;78;81;79;80" 
+               dur="1.5s" 
+               repeatCount="indefinite"/>
+      <animate attributeName="r" 
+               values="3;3.3" 
+               dur="1.5s" 
+               repeatCount="indefinite"/>
+      <animate attributeName="opacity" 
+               values="0;1;1;0" 
+               keyTimes="0;0.1;0.8;1" 
+               dur="1.5s" 
+               repeatCount="indefinite"/>
+    </circle>
+    
+    <!-- 泡泡2 -->
+    <circle r="2.5" fill="#333" opacity="0">
+      <animate attributeName="cy" 
+               values="171;60" 
+               dur="1.5s" 
+               begin="0.3s"
+               repeatCount="indefinite"/>
+      <animate attributeName="cx" 
+               values="100;98;102;100;99;100" 
+               dur="1.5s" 
+               begin="0.3s"
+               repeatCount="indefinite"/>
+      <animate attributeName="r" 
+               values="2.5;2.75" 
+               dur="1.5s" 
+               begin="0.3s"
+               repeatCount="indefinite"/>
+      <animate attributeName="opacity" 
+               values="0;1;1;0" 
+               keyTimes="0;0.1;0.8;1" 
+               dur="1.5s" 
+               begin="0.3s"
+               repeatCount="indefinite"/>
+    </circle>
+    
+    <!-- 泡泡3 -->
+    <circle r="3.5" fill="#333" opacity="0">
+      <animate attributeName="cy" 
+               values="171;60" 
+               dur="1.5s" 
+               begin="0.6s"
+               repeatCount="indefinite"/>
+      <animate attributeName="cx" 
+               values="120;122;118;121;119;120" 
+               dur="1.5s" 
+               begin="0.6s"
+               repeatCount="indefinite"/>
+      <animate attributeName="r" 
+               values="3.5;3.85" 
+               dur="1.5s" 
+               begin="0.6s"
+               repeatCount="indefinite"/>
+      <animate attributeName="opacity" 
+               values="0;1;1;0" 
+               keyTimes="0;0.1;0.8;1" 
+               dur="1.5s" 
+               begin="0.6s"
+               repeatCount="indefinite"/>
+    </circle>
+    
+    <!-- 泡泡4 -->
+    <circle r="2" fill="#333" opacity="0">
+      <animate attributeName="cy" 
+               values="171;60" 
+               dur="1.5s" 
+               begin="0.9s"
+               repeatCount="indefinite"/>
+      <animate attributeName="cx" 
+               values="90;88;92;89;91;90" 
+               dur="1.5s" 
+               begin="0.9s"
+               repeatCount="indefinite"/>
+      <animate attributeName="r" 
+               values="2;2.2" 
+               dur="1.5s" 
+               begin="0.9s"
+               repeatCount="indefinite"/>
+      <animate attributeName="opacity" 
+               values="0;1;1;0" 
+               keyTimes="0;0.1;0.8;1" 
+               dur="1.5s" 
+               begin="0.9s"
+               repeatCount="indefinite"/>
+    </circle>
+    
+    <!-- 泡泡5 -->
+    <circle r="2.8" fill="#333" opacity="0">
+      <animate attributeName="cy" 
+               values="171;60" 
+               dur="1.5s" 
+               begin="1.2s"
+               repeatCount="indefinite"/>
+      <animate attributeName="cx" 
+               values="110;108;112;110;111;110" 
+               dur="1.5s" 
+               begin="1.2s"
+               repeatCount="indefinite"/>
+      <animate attributeName="r" 
+               values="2.8;3.08" 
+               dur="1.5s" 
+               begin="1.2s"
+               repeatCount="indefinite"/>
+      <animate attributeName="opacity" 
+               values="0;1;1;0" 
+               keyTimes="0;0.1;0.8;1" 
+               dur="1.5s" 
+               begin="1.2s"
+               repeatCount="indefinite"/>
+    </circle>
+  </g>
+</svg>

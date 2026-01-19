@@ -1,0 +1,106 @@
+# VIP用户配额模板
+name: "vip_user"
+display_name: "VIP用户"
+description: "付费VIP用户配额限制"
+
+# 积分系统
+credits:
+  monthly_credits: 10000      # 月度积分（10倍于免费用户）
+  daily_credits: -1           # 无每日限制
+  
+  # 模型调用成本（每次调用消耗的积分）
+  model_costs:
+    "gpt-3.5-turbo": 1        # 基础模型
+    "gpt-3.5-turbo-16k": 2    
+    "gpt-4": 10               # GPT-4开放给VIP
+    "gpt-4-turbo": 8          # GPT-4 Turbo稍便宜
+    "gpt-4-vision": 12        # 视觉模型更贵
+    "claude-3-haiku": 1       
+    "claude-3-sonnet": 5      # Claude中级模型
+    "claude-3-opus": 10       # Claude最强模型
+    "deepseek-chat": 0.5      
+    "deepseek-coder": 0.8     # 代码模型
+    "qwen-turbo": 0.5         
+    "qwen-plus": 2            # 通义千问Plus
+    
+  # Token成本（每1000 token消耗的积分）
+  token_costs:
+    "gpt-3.5-turbo":
+      input_per_1k: 0.1       
+      output_per_1k: 0.2      
+    "gpt-4":
+      input_per_1k: 0.3       # GPT-4 token成本更高
+      output_per_1k: 0.6
+    "gpt-4-turbo":
+      input_per_1k: 0.25
+      output_per_1k: 0.5
+    "claude-3-opus":
+      input_per_1k: 0.3
+      output_per_1k: 0.6
+    "claude-3-sonnet":
+      input_per_1k: 0.15
+      output_per_1k: 0.3
+    "deepseek-chat":
+      input_per_1k: 0.05
+      output_per_1k: 0.1
+
+# 限制配置
+limits:
+  max_tokens_per_request: 4000    # 单次请求最大token
+  max_requests_per_minute: 20     # 每分钟最多20次请求
+  max_requests_per_hour: 500      # 每小时最多500次请求
+  concurrent_tasks: 3              # 最大并发任务数
+
+# 存储配额
+storage:
+  space_mb: 1000                  # 1GB存储空间
+  max_documents: 100               # 最大文档数
+  max_file_mb: 20                  # 单文件大小上限（MB）
+
+# 功能权限
+features:
+  knowledge_base: 1                # 知识库访问
+  advanced_tools: 1                # 高级工具（启用）
+  workflow_creation: 1             # 工作流创建（启用）
+  api_access: 1                    # API访问（启用）
+  export_data: 1                   # 数据导出（启用）
+  priority_support: 1              # 优先支持
+  custom_prompts: 1                # 自定义提示词
+
+# 积分策略
+credit_policies:
+  reset_cycle: "monthly"           # 月度重置
+  carry_over: true                 # 允许积分结转（最多结转30%）
+  carry_over_limit: 0.3            # 结转比例上限
+  allow_purchase: true             # 允许购买额外积分
+  purchase_rate: 0.008             # VIP购买价格更优惠（元/积分）
+  
+  # 积分获取方式（VIP额外奖励）
+  earning_rules:
+    daily_login: 20                # 每日登录奖励（2倍）
+    invite_user: 200               # 邀请新用户奖励（2倍）
+    complete_profile: 100          # 完善资料奖励
+    monthly_bonus: 500             # VIP月度奖励
+    
+  # 超额使用策略
+  overage:
+    allow: true                    # 允许超额使用
+    rate_per_credit: 0.01          # 超额费率（元/积分）
+    auto_purchase: false           # 不自动购买，需用户确认
+
+# VIP特权
+privileges:
+  priority_queue: true             # 优先队列
+  batch_processing: true           # 批量处理
+  custom_models: true              # 自定义模型配置
+  advanced_analytics: true         # 高级分析功能
+  
+# 通知设置
+notifications:
+  low_credit_threshold: 500       # 积分低于500时提醒
+  usage_report: "daily"           # 每日使用报告
+  threshold_alerts:               # 阶梯提醒
+    - threshold: 0.2              # 剩余20%时
+      method: "email"
+    - threshold: 0.1              # 剩余10%时
+      method: "email+sms"

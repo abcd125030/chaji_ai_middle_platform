@@ -1,0 +1,73 @@
+# 速率限制配置
+name: "rate_limits"
+description: "系统级速率限制配置"
+
+# 全局速率限制
+global:
+  requests_per_second: 1000     # 系统总QPS
+  requests_per_minute: 30000    # 系统总QPM
+  burst_size: 100               # 突发容量
+  
+# 按用户类型的速率限制
+by_user_type:
+  anonymous:
+    requests_per_minute: 1      # 匿名用户每分钟1次
+    requests_per_hour: 3       # 匿名用户每小时3次
+    burst_allowed: false        # 不允许突发
+    
+  free:
+    requests_per_minute: 3      # 免费用户每分钟5次
+    requests_per_hour: 90      # 免费用户每小时100次
+    requests_per_day: "90*12"      # 免费用户每天90*12次
+    burst_size: 2               # 允许2倍突发
+    
+  vip:
+    requests_per_minute: 20     # VIP用户每分钟20次
+    requests_per_hour: 500      # VIP用户每小时500次
+    requests_per_day: 5000      # VIP用户每天5000次
+    burst_size: 5               # 允许5倍突发
+    
+  max_user:
+    requests_per_minute: 100    # Max用户每分钟100次
+    requests_per_hour: 2000     # Max用户每小时2000次
+    requests_per_day: -1        # 无日限制
+    burst_size: 10              # 允许10倍突发
+
+# 按API端点的速率限制
+by_endpoint:
+  "/api/chat":
+    requests_per_minute: 10     # 聊天接口限制
+    cooldown: 1                 # 冷却时间（秒）
+    
+  "/api/knowledge/upload":
+    requests_per_minute: 5      # 上传接口限制
+    cooldown: 10                # 冷却时间（秒）
+    max_file_size_mb: 100       # 最大文件大小
+    
+  "/api/workflow/execute":
+    requests_per_minute: 3      # 工作流执行限制
+    cooldown: 5                 # 冷却时间（秒）
+    max_concurrent: 2           # 最大并发数
+
+# 惩罚策略
+penalty:
+  enabled: true                 # 启用惩罚机制
+  threshold: 0.9                # 触发阈值（90%）
+  
+  actions:
+    - type: "warning"
+      at_percentage: 80         # 80%时警告
+      
+    - type: "throttle"
+      at_percentage: 90         # 90%时限流
+      reduce_by: 0.5            # 减少50%配额
+      
+    - type: "block"
+      at_percentage: 100        # 100%时封禁
+      duration_minutes: 60      # 封禁60分钟
+      
+# 白名单（不受限制）
+whitelist:
+  ips: []                       # IP白名单
+  user_ids: []                  # 用户ID白名单
+  api_keys: []                  # API密钥白名单

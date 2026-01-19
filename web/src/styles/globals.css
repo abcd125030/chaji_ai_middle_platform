@@ -1,0 +1,777 @@
+@import "tailwindcss";
+
+/* NEXT 默认风格 禁止修改 */
+
+:root {
+  --background: #0a0a0a;
+  --foreground: #ffffff;
+  --accent: #383838;
+  --card-bg: #111111;  /* rgb(17, 17, 17) 卡片背景色 */
+  --code-bg: rgba(255,255,255,0.05);
+  --border: #333333;
+  --secondary-hover: #2a2a2a;
+  
+  /* 装饰性细节色系 - 仅用于修饰效果 */
+  --decor-primary: #4a6a7a;    /* 主装饰色 - 蓝灰色（点的基础色） */
+  --decor-hover: #6dd8ff;      /* 装饰高亮色 - 亮冷青色（星芒激活色） */
+  --decor-secondary: #3a5a6a;  /* 次要装饰色 - 暗蓝灰色 */
+  
+  /* 渐变颜色变量 */
+  --gradient-start: #ffffff;   /* 渐变起始色 - 白色 */
+  --gradient-end: #adadad;     /* 渐变结束色 - 灰色 */
+  
+  /* 高亮标记颜色 */
+  --mark-bg: rgba(255, 255, 0, 0.3);  /* 黄色高亮背景 */
+  
+  /* 订阅功能图标颜色 */
+  --icon-agentic: #60a5fa;    /* 蓝色 - Agentic 功能 */
+  --icon-extension: #c084fc;   /* 紫色 - Extension 功能 */
+  --icon-chat: #22d3ee;        /* 青色 - Chat 功能 */
+  --icon-check: #4ade80;       /* 绿色 - 默认勾选 */
+}
+
+@theme inline {
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --font-sans: var(--font-geist-sans);
+  --font-mono: var(--font-geist-mono);
+}
+
+body {
+  background: var(--background);
+  color: var(--foreground);
+  font-family: Arial, Helvetica, sans-serif;
+}
+
+/* NEXT 默认风格结束 */
+
+/* 移动端安全区域支持 (iPhone刘海屏等) */
+.safe-area-inset-bottom {
+  padding-bottom: env(safe-area-inset-bottom, 0);
+}
+
+.pb-safe {
+  padding-bottom: calc(1rem + env(safe-area-inset-bottom, 0));
+}
+
+/* 防止移动端过度滚动效果 */
+@media (max-width: 768px) {
+  html, body {
+    overscroll-behavior: none;
+    -webkit-overflow-scrolling: touch;
+  }
+  
+  /* 禁用过度滚动但保持正常滚动 */
+  .overscroll-none {
+    -webkit-overflow-scrolling: touch;
+    overscroll-behavior: none;
+  }
+  
+  .overscroll-contain {
+    -webkit-overflow-scrolling: touch;
+    overscroll-behavior: contain;
+  }
+}
+
+/* 隐藏横向滚动条 */
+.scrollbar-hide {
+  -ms-overflow-style: none;  /* IE and Edge */
+  scrollbar-width: none;  /* Firefox */
+}
+.scrollbar-hide::-webkit-scrollbar {
+  display: none;  /* Chrome, Safari and Opera */
+}
+
+/* 全局标题渐变样式 - Next.js 官网风格 (排除 Markdown 内容) */
+h1:not(.markdown-content h1), 
+h2:not(.markdown-content h2), 
+h3:not(.markdown-content h3), 
+h4:not(.markdown-content h4), 
+h5:not(.markdown-content h5), 
+h6:not(.markdown-content h6) {
+  background-image: linear-gradient(var(--gradient-start) 0%, var(--gradient-end) 100%);
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+
+/* 可选的独立渐变类 */
+.gradient-title {
+  background-image: linear-gradient(var(--gradient-start) 0%, var(--gradient-end) 100%);
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+
+/* 点状星空背景样式 */
+.geometric-background {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  z-index: -1;
+  overflow: hidden;
+  background: #000000;
+}
+
+/* 点阵容器 */
+.geometric-background::before {
+  content: "";
+  position: absolute;
+  width: 100%;
+  height: 100%;
+  top: 0;
+  left: 0;
+}
+
+/* 单个点的样式 - 默认状态和星芒状态 */
+.dot {
+  position: absolute;
+  width: 2px;
+  height: 2px;
+  background: var(--decor-primary);
+  border-radius: 50%;
+  opacity: 0.5;
+  transition: all 0.15s ease-out;
+}
+
+/* 点的星芒状态 */
+.dot.sparkle {
+  animation: dotToStar 0.85s ease-in-out;
+}
+
+/* 星芒状态的十字光线 */
+.dot.sparkle::before,
+.dot.sparkle::after {
+  content: "";
+  position: absolute;
+  background: linear-gradient(90deg, transparent, var(--decor-hover) 50%, transparent);
+  animation: crossFade 0.85s ease-in-out;
+}
+
+.dot.sparkle::before {
+  width: 20px;
+  height: 1px;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+}
+
+.dot.sparkle::after {
+  width: 1px;
+  height: 20px;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  background: linear-gradient(180deg, transparent, var(--decor-hover) 50%, transparent);
+}
+
+/* 点变星芒的动画 */
+@keyframes dotToStar {
+  0% {
+    background: var(--decor-primary);
+    transform: scale(1) rotate(0deg);
+    opacity: 0.5;
+  }
+  50% {
+    background: var(--decor-hover);
+    transform: scale(1.5) rotate(45deg);
+    opacity: 1;
+    box-shadow: 
+      0 0 6px var(--decor-hover),
+      0 0 12px var(--decor-hover);
+  }
+  100% {
+    background: var(--decor-primary);
+    transform: scale(1) rotate(90deg);
+    opacity: 0.5;
+  }
+}
+
+/* 十字光线渐显渐隐 */
+@keyframes crossFade {
+  0%, 100% {
+    opacity: 0;
+  }
+  50% {
+    opacity: 1;
+  }
+}
+
+
+@media (prefers-color-scheme: dark) {
+  .geometric-background::before {
+    opacity: 0.6;
+  }
+}
+
+/* WebKit 浏览器 */
+::-webkit-scrollbar {
+  width: 2px !important;
+  height: 2px !important;
+}
+
+::-webkit-scrollbar-track {
+  background: transparent !important;
+}
+
+::-webkit-scrollbar-thumb {
+  background: var(--foreground) !important;
+  border-radius: 1px !important;
+}
+
+::-webkit-scrollbar-button {
+  display: none !important;
+}
+
+/* 强制重绘 hack */
+html {
+  transform: translateZ(0);
+}
+
+/* Markdown 渲染样式 */
+.markdown-content {
+  max-width: none;
+  color: var(--foreground);
+  width: 100%;
+}
+
+.markdown-content h1 {
+  font-size: 2rem;
+  font-weight: 700;
+  margin-bottom: 1.25rem;
+  margin-top: 2rem;
+  color: var(--foreground);
+  border-bottom: 2px solid var(--border);
+  padding-bottom: 0.75rem;
+  line-height: 1.2;
+}
+
+.markdown-content h1:first-child {
+  margin-top: 0;
+}
+
+.markdown-content h2 {
+  font-size: 1.5rem;
+  font-weight: 600;
+  margin-bottom: 1rem;
+  margin-top: 1.75rem;
+  color: var(--foreground);
+  line-height: 1.3;
+}
+
+.markdown-content h2:first-child {
+  margin-top: 0;
+}
+
+.markdown-content h3 {
+  font-size: 1.25rem;
+  font-weight: 600;
+  margin-bottom: 0.75rem;
+  margin-top: 1.5rem;
+  color: var(--foreground);
+  line-height: 1.4;
+}
+
+.markdown-content h3:first-child {
+  margin-top: 0;
+}
+
+.markdown-content h4 {
+  font-size: 1.125rem;
+  font-weight: 500;
+  margin-bottom: 0.5rem;
+  margin-top: 1.25rem;
+  color: var(--foreground);
+  line-height: 1.4;
+}
+
+.markdown-content h4:first-child {
+  margin-top: 0;
+}
+
+.markdown-content p {
+  margin-bottom: 1rem;
+  line-height: 1.7;
+  color: var(--foreground);
+  opacity: 0.85;
+  font-size: 0.875rem;
+}
+
+.markdown-content ul {
+  margin-bottom: 1rem;
+  margin-left: 1rem;
+  list-style-type: disc;
+  color: var(--foreground);
+  padding-left: 0.5rem;
+}
+
+.markdown-content ul li {
+  margin-bottom: 0.5rem;
+  color: var(--foreground);
+  opacity: 0.85;
+  font-size: 0.875rem;
+  line-height: 1.6;
+}
+
+.markdown-content ol {
+  margin-bottom: 1rem;
+  margin-left: 1rem;
+  list-style-type: decimal;
+  color: var(--foreground);
+  padding-left: 0.5rem;
+}
+
+.markdown-content ol li {
+  margin-bottom: 0.5rem;
+  color: var(--foreground);
+  opacity: 0.85;
+  font-size: 0.875rem;
+  line-height: 1.6;
+}
+
+/* 多级列表缩进 */
+.markdown-content ul ul,
+.markdown-content ol ol,
+.markdown-content ul ol,
+.markdown-content ol ul {
+  margin-top: 0.5rem;
+  margin-bottom: 0.5rem;
+  margin-left: 1.5rem;
+}
+
+.markdown-content ul ul {
+  list-style-type: circle;
+}
+
+.markdown-content ul ul ul {
+  list-style-type: square;
+}
+
+/* 任务列表 */
+.markdown-content input[type="checkbox"] {
+  margin-right: 0.5rem;
+  accent-color: var(--accent);
+}
+
+.markdown-content li input[type="checkbox"] {
+  margin-right: 0.5rem;
+}
+
+.markdown-content blockquote {
+  border-left: 4px solid var(--accent);
+  padding-left: 1rem;
+  margin: 0.75rem 0;
+  font-style: italic;
+  color: var(--foreground);
+  opacity: 0.8;
+  background-color: var(--background);
+  padding-top: 0.5rem;
+  padding-bottom: 0.5rem;
+  border-radius: 0 0.25rem 0.25rem 0;
+}
+
+.markdown-content code {
+  background-color: var(--background);
+  padding: 0.125rem 0.375rem;
+  border-radius: 0.25rem;
+  font-size: 0.875rem;
+  font-family: ui-monospace, SFMono-Regular, "SF Mono", Consolas, "Liberation Mono", Menlo, monospace;
+  color: var(--foreground);
+  border: 1px solid var(--border);
+}
+
+.markdown-content pre {
+  background-color: var(--background);
+  padding: 1rem;
+  border-radius: 0.5rem;
+  overflow-x: auto;
+  margin: 0.75rem 0;
+  border: 1px solid var(--border);
+}
+
+.markdown-content pre code {
+  background: none;
+  padding: 0;
+  border: none;
+  color: var(--foreground);
+}
+
+.markdown-content table {
+  min-width: 100%;
+  border: 1px solid var(--border);
+  border-radius: 0.5rem;
+  margin: 0.75rem 0;
+  border-collapse: collapse;
+}
+
+.markdown-content table-container {
+  overflow-x: auto;
+  margin: 0.75rem 0;
+}
+
+.markdown-content thead {
+  background-color: var(--background);
+}
+
+.markdown-content th {
+  padding: 0.5rem 1rem;
+  text-align: left;
+  font-weight: 600;
+  color: var(--foreground);
+  border-bottom: 1px solid var(--border);
+}
+
+.markdown-content td {
+  padding: 0.5rem 1rem;
+  color: var(--foreground);
+  border-bottom: 1px solid var(--border);
+}
+
+.markdown-content tr:last-child td {
+  border-bottom: none;
+}
+
+.markdown-content a {
+  color: var(--foreground); /* 使用前景色 */
+  text-decoration: underline;
+  text-underline-offset: 0.2em;
+  transition: opacity 0.2s ease;
+  opacity: 0.7; /* 默认降低透明度以区分普通文本 */
+  font-weight: 500;
+}
+
+.markdown-content a:hover {
+  opacity: 1; /* 悬停时完全不透明 */
+  text-decoration-thickness: 2px;
+}
+
+.markdown-content strong {
+  font-weight: 600;
+  color: var(--foreground);
+}
+
+.markdown-content em {
+  font-style: italic;
+  color: var(--foreground);
+}
+
+/* 删除线 */
+.markdown-content del,
+.markdown-content s {
+  text-decoration: line-through;
+  color: var(--foreground);
+  opacity: 0.6;
+}
+
+/* 下划线 */
+.markdown-content u {
+  text-decoration: underline;
+  color: var(--foreground);
+}
+
+/* 水平分割线 */
+.markdown-content hr {
+  border: none;
+  border-top: 2px solid var(--border);
+  margin: 2rem 0;
+  opacity: 0.5;
+}
+
+/* 键盘按键样式 */
+.markdown-content kbd {
+  background-color: var(--background);
+  border: 1px solid var(--border);
+  border-radius: 0.25rem;
+  box-shadow: 0 1px 1px rgba(0, 0, 0, 0.2);
+  color: var(--foreground);
+  display: inline-block;
+  font-family: ui-monospace, SFMono-Regular, "SF Mono", Consolas, "Liberation Mono", Menlo, monospace;
+  font-size: 0.75rem;
+  line-height: 1;
+  padding: 0.25rem 0.375rem;
+  white-space: nowrap;
+}
+
+/* 标记/高亮文本 */
+.markdown-content mark {
+  background-color: var(--mark-bg);
+  color: var(--foreground);
+  padding: 0.125rem 0.25rem;
+  border-radius: 0.125rem;
+}
+
+/* 上标和下标 */
+.markdown-content sup {
+  font-size: 0.75rem;
+  line-height: 0;
+  position: relative;
+  vertical-align: baseline;
+  top: -0.5em;
+}
+
+.markdown-content sub {
+  font-size: 0.75rem;
+  line-height: 0;
+  position: relative;
+  vertical-align: baseline;
+  bottom: -0.25em;
+}
+
+/* 缩写 */
+.markdown-content abbr {
+  border-bottom: 1px dotted var(--border);
+  cursor: help;
+  text-decoration: none;
+}
+
+/* 定义列表 */
+.markdown-content dl {
+  margin-bottom: 1rem;
+}
+
+.markdown-content dt {
+  font-weight: 600;
+  margin-bottom: 0.25rem;
+  color: var(--foreground);
+}
+
+.markdown-content dd {
+  margin-left: 1rem;
+  margin-bottom: 0.5rem;
+  color: var(--foreground);
+  opacity: 0.85;
+  font-size: 0.875rem;
+}
+
+/* 详情/摘要 */
+.markdown-content details {
+  margin-bottom: 1rem;
+  border: 1px solid var(--border);
+  border-radius: 0.5rem;
+  padding: 0.5rem;
+}
+
+.markdown-content summary {
+  font-weight: 600;
+  cursor: pointer;
+  padding: 0.5rem;
+  margin: -0.5rem;
+  border-radius: 0.5rem;
+  color: var(--foreground);
+}
+
+.markdown-content summary:hover {
+  background-color: var(--background);
+}
+
+.markdown-content details[open] summary {
+  margin-bottom: 0.5rem;
+  border-bottom: 1px solid var(--border);
+}
+
+/* 图片 */
+.markdown-content img {
+  max-width: 100%;
+  height: auto;
+  border-radius: 0.5rem;
+  margin: 1rem 0;
+  border: 1px solid var(--border);
+}
+
+/* 图片标题 */
+.markdown-content figure {
+  margin: 1rem 0;
+  text-align: center;
+}
+
+.markdown-content figcaption {
+  font-size: 0.75rem;
+  color: var(--foreground);
+  opacity: 0.7;
+  margin-top: 0.5rem;
+  font-style: italic;
+}
+/* 动画效果 */
+.message-enter {
+  opacity: 0;
+  transform: translateY(20px);
+  animation: messageSlideIn 0.3s ease-out forwards;
+}
+
+@keyframes messageSlideIn {
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.step-status-running {
+  animation: pulse 2s infinite;
+}
+
+@keyframes pulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.5; }
+}
+
+.step-progress-bar {
+  animation: progressFill 0.5s ease-out;
+}
+
+@keyframes progressFill {
+  from { width: 0%; }
+  to { width: 100%; }
+}
+
+/* Beta badge sweep flash animation */
+.beta-badge-flash {
+  position: relative;
+  overflow: hidden;
+}
+
+.beta-badge-flash::after {
+  content: '';
+  position: absolute;
+  top: -50%;
+  left: -100%;
+  width: 20px;
+  height: 200%;
+  background: linear-gradient(
+    90deg,
+    transparent,
+    rgba(255, 255, 255, 0.2),
+    rgba(255, 255, 255, 0.3),
+    rgba(255, 255, 255, 0.2),
+    transparent
+  );
+  transform: rotate(30deg);
+  animation: sweepFlash 2.5s ease-in-out infinite;
+}
+
+@keyframes sweepFlash {
+  0%, 20% {
+    left: -100%;
+    opacity: 0;
+  }
+  20.1% {
+    left: -100%;
+    opacity: 1;
+  }
+  40% {
+    left: 150%;
+    opacity: 1;
+  }
+  40.1%, 100% {
+    left: 150%;
+    opacity: 0;
+  }
+}
+
+/* PDF2MD 文件面板样式 */
+.file-panel {
+  background: var(--background);
+  border: 1px solid #1a1a1a;
+  border-radius: 0.75rem;
+  transition: border-color 0.2s;
+}
+
+.file-panel:hover {
+  border-color: #2a2a2a;
+}
+
+.file-icon-container {
+  padding: 0.625rem;
+  background: #1a1a1a;
+  border-radius: 0.5rem;
+  transition: background-color 0.2s;
+}
+
+.file-panel:hover .file-icon-container {
+  background: #2a2a2a;
+}
+
+.control-section {
+  padding: 0.75rem;
+  background: #1a1a1a;
+  border-radius: 0.5rem;
+}
+
+/* Toggle Switch 组件样式 */
+.toggle-switch {
+  position: relative;
+  width: 2.75rem;
+  height: 1.5rem;
+  border-radius: 9999px;
+  transition: background-color 0.2s ease-in-out;
+  flex-shrink: 0;
+  cursor: pointer;
+}
+
+.toggle-switch.active {
+  background-color: var(--foreground);
+}
+
+.toggle-switch.inactive {
+  background-color: #2a2a2a;
+}
+
+.toggle-switch-thumb {
+  position: absolute;
+  top: 0.125rem;
+  left: 0.125rem;
+  width: 1.25rem;
+  height: 1.25rem;
+  border-radius: 9999px;
+  background-color: var(--background);
+  transition: transform 0.2s ease-in-out;
+}
+
+.toggle-switch.active .toggle-switch-thumb {
+  transform: translateX(1.25rem);
+}
+
+/* 页面范围控件样式 */
+.page-range-input {
+  width: 100%;
+  padding: 0.625rem 0.75rem;
+  background: var(--background);
+  color: var(--foreground);
+  border: 1px solid #2a2a2a;
+  border-radius: 0.375rem;
+  font-size: 0.875rem;
+  transition: border-color 0.15s;
+}
+
+.page-range-input:focus {
+  border-color: var(--foreground);
+  outline: none;
+}
+
+.page-range-input::placeholder {
+  color: #444444;
+}
+
+.page-range-placeholder {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  flex: 1;
+  padding: 0.625rem 0.75rem;
+  background: var(--background);
+  border: 1px solid #2a2a2a;
+  border-radius: 0.375rem;
+}
+
+.page-range-set-btn {
+  margin-left: auto;
+  font-size: 0.75rem;
+  color: var(--foreground);
+  opacity: 0.9;
+  transition: opacity 0.15s;
+}
+
+.page-range-set-btn:hover {
+  opacity: 1;
+}

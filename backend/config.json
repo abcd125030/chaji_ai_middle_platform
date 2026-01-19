@@ -1,0 +1,11 @@
+{
+  "ALLOWED_HOSTS": ["localhost", "127.0.0.1"],
+  "_comment_ALLOWED_HOSTS": "允许访问的主机名列表",
+  "CSRF_TRUSTED_ORIGINS": [],
+  "_comment_CSRF_TRUSTED_ORIGINS": "CSRF信任的源列表",
+  "CORS_ALLOWED_ORIGINS": ["http://localhost:3000", "http://127.0.0.1:3000"],
+  "_comment_CORS_ALLOWED_ORIGINS": "跨域资源共享允许的源",
+  "CORS_ALLOW_CREDENTIALS": true,
+  "CORS_ALLOW_ALL_ORIGINS": false
+
+}

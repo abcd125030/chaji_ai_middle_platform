@@ -1,0 +1,58 @@
+# 用户Profile默认值配置
+name: "default_profile"
+description: "新用户Profile的默认配置"
+
+# 默认标签
+tags:
+  - "new_user"
+
+# 默认偏好设置
+preferences:
+  language: "zh-CN"           # 默认语言
+  timezone: "Asia/Shanghai"   # 默认时区
+  
+  # AI交互偏好
+  ai_preferences:
+    model: "gpt-3.5-turbo"    # 默认模型
+    temperature: 0.7          # 创造性参数
+    max_tokens: 2000          # 默认最大token
+    response_style: "balanced" # 响应风格：concise/balanced/detailed
+    
+  # 界面偏好
+  ui_preferences:
+    theme: "light"            # 主题：light/dark/auto
+    density: "normal"         # 界面密度：compact/normal/comfortable
+    notifications: true       # 是否接收通知
+    
+  # 数据偏好
+  data_preferences:
+    auto_save: true          # 自动保存
+    save_interval: 60        # 保存间隔（秒）
+    export_format: "json"    # 默认导出格式
+
+# 默认能力配置
+capabilities:
+  allowed: []                # 默认无特殊能力
+  blocked: []                # 默认无禁用能力
+  
+# 默认上下文数据
+context_data:
+  industry: ""               # 行业
+  role: ""                   # 职位角色
+  experience_level: "beginner" # 经验水平
+  interests: []              # 兴趣领域
+  
+# 初始化配置
+initialization:
+  send_welcome_email: true   # 发送欢迎邮件
+  show_onboarding: true      # 显示引导流程
+  apply_trial_quota: true    # 应用试用配额
+  trial_days: 14            # 试用天数
+  
+  # 根据登录方式设置默认配额
+  default_quotas_by_provider:
+    email: "free_user"        # 邮箱注册用户：免费配额
+    feishu: "max_user"        # 飞书登录用户：最高配额（企业内部）
+    google: "free_user"       # Google登录：免费配额
+    github: "vip_user"        # GitHub登录：VIP配额（开发者优惠）
+    wechat: "free_user"       # 微信登录：免费配额

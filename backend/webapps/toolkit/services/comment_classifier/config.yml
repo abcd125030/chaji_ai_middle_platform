@@ -1,0 +1,136 @@
+# 评论分类服务配置文件
+# 注意：此文件包含示例配置，实际部署时请复制为 config.local.yml 并修改
+
+# 基础配置
+base:
+  # 分类层级配置文件路径（相对于项目根目录）
+  categories_config_path: "notebook/comment-classify/categories_hierarchy.json"
+  # 是否仅使用AI分类（跳过规则分类器）
+  use_ai_only: false
+  # 调试模式
+  debug_mode: false
+
+# AI配置
+ai:
+  # AI提供商：qwen, gemini, openai
+  provider: "qwen"
+  # 模型名称（将传递给core_service）
+  model_id: "qwen-plus"
+  # API端点（可选，如果不设置将使用默认值）
+  endpoint: "https://dashscope.aliyuncs.com/compatible-mode/v1/chat/completions"
+  # API密钥（建议使用环境变量）
+  api_key: "${ALI_BAILIAN_API_KEY}"
+  # 自定义请求头
+  custom_headers: {}
+  # 额外参数
+  params:
+    temperature: 0.3
+    max_tokens: 500
+
+# 并发控制
+concurrency:
+  # 最大并发数
+  max_concurrent: 20
+  # 每秒请求数限制
+  requests_per_second: 4
+  # 批处理大小
+  batch_size: 100
+
+# 分类配置
+classification:
+  # 最小置信度阈值
+  min_confidence_score: 0.1
+  # 是否允许不完整分类（只有一级分类）
+  allow_incomplete: false
+  # 分类后是否自动更新规则
+  auto_update_rules: false
+  # 混合模式配置
+  hybrid:
+    # 是否启用混合模式
+    enabled: false
+    # 规则分类器置信度阈值（低于此值时使用AI）
+    rule_confidence_threshold: 0.7
+
+# 处理配置
+processing:
+  # 样本大小（null表示处理全部）
+  sample_size: null
+  # 最大重试次数
+  max_retries: 3
+  # 超时时间（秒）
+  timeout_seconds: 30
+
+# 输出配置
+output:
+  # 输出格式：excel, csv, json
+  format: "excel"
+  # 是否生成报告
+  generate_report: true
+  # 是否包含元数据
+  include_metadata: true
+  # 输出目录（如果未指定output_path时的默认目录）
+  default_output_dir: "./output"
+
+# 组件特定配置
+components:
+  loader:
+    # 支持的文件格式
+    supported_formats: ["xlsx", "xls", "csv", "json"]
+    # 编码设置
+    encoding: "utf-8"
+  
+  preprocessor:
+    # 文本清洗选项
+    clean_text: true
+    # 去除空白字符
+    strip_whitespace: true
+    # 最小文本长度
+    min_text_length: 5
+  
+  classifier:
+    # 分类器特定配置
+    use_cache: true
+    cache_ttl: 3600
+  
+  postprocessor:
+    # 是否检查分类完整性
+    check_completeness: true
+    # 是否优化分类结果
+    optimize_results: true
+  
+  exporter:
+    # Excel特定配置
+    excel:
+      sheet_name: "分类结果"
+      include_statistics: true
+    # CSV特定配置
+    csv:
+      delimiter: ","
+      quoting: "minimal"
+
+# 日志配置
+logging:
+  # 是否启用LLM调用日志
+  enable_llm_logs: true
+  # 日志级别：DEBUG, INFO, WARNING, ERROR
+  level: "INFO"
+  # 日志输出目录
+  log_dir: "./logs"
+
+# 环境特定配置（开发、测试、生产）
+environments:
+  development:
+    ai:
+      model_id: "qwen-plus"
+    concurrency:
+      max_concurrent: 5
+      requests_per_second: 2
+    
+  production:
+    ai:
+      model_id: "qwen-max"
+    concurrency:
+      max_concurrent: 50
+      requests_per_second: 10
+    logging:
+      level: "WARNING"

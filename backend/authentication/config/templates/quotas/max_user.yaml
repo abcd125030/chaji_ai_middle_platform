@@ -1,0 +1,131 @@
+# 最高级用户配额模板
+name: "max_user"
+display_name: "Max用户"
+description: "最高级别用户配额配置"
+
+# 积分系统
+credits:
+  monthly_credits: 100000     # 月度积分（100倍于免费用户）
+  daily_credits: -1           # 无每日限制
+  
+  # 模型调用成本（每次调用消耗的积分）
+  model_costs:
+    "gpt-3.5-turbo": 0.5      # Max用户享受半价
+    "gpt-3.5-turbo-16k": 1    
+    "gpt-4": 5                # GPT-4半价
+    "gpt-4-turbo": 4          
+    "gpt-4-vision": 6         
+    "gpt-4o": 8               # 最新模型
+    "claude-3-haiku": 0.5     
+    "claude-3-sonnet": 2.5    
+    "claude-3-opus": 5        
+    "claude-3.5-sonnet": 4    # Claude 3.5
+    "deepseek-chat": 0.2      
+    "deepseek-coder": 0.3     
+    "qwen-turbo": 0.2         
+    "qwen-plus": 1            
+    "qwen-max": 3             # 通义千问Max
+    # 支持所有新模型，默认成本为5
+    
+  # Token成本（每1000 token消耗的积分）- Max用户享受优惠
+  token_costs:
+    "gpt-3.5-turbo":
+      input_per_1k: 0.05      # 半价
+      output_per_1k: 0.1      
+    "gpt-4":
+      input_per_1k: 0.15      # 半价
+      output_per_1k: 0.3
+    "gpt-4-turbo":
+      input_per_1k: 0.12
+      output_per_1k: 0.25
+    "gpt-4o":
+      input_per_1k: 0.2
+      output_per_1k: 0.4
+    "claude-3-opus":
+      input_per_1k: 0.15
+      output_per_1k: 0.3
+    "claude-3.5-sonnet":
+      input_per_1k: 0.1
+      output_per_1k: 0.2
+    # 默认token成本
+    "default":
+      input_per_1k: 0.1
+      output_per_1k: 0.2
+
+# 限制配置（几乎无限制）
+limits:
+  max_tokens_per_request: 32000   # 超大上下文支持
+  max_requests_per_minute: 100    # 每分钟100次请求
+  max_requests_per_hour: 2000     # 每小时2000次请求
+  concurrent_tasks: 10             # 10个并发任务
+
+# 存储配额
+storage:
+  space_mb: 10000                 # 10GB存储空间
+  max_documents: -1                # 无限文档数
+  max_file_mb: 100                 # 单文件100MB上限
+
+# 功能权限（全部开放）
+features:
+  knowledge_base: -1               # 无限制使用
+  advanced_tools: -1               # 无限制使用
+  workflow_creation: -1            # 无限制创建
+  api_access: -1                   # 无限制API调用
+  export_data: 1                   # 数据导出
+  priority_support: 1              # 优先支持
+  custom_prompts: 1                # 自定义提示词
+  dedicated_support: 1             # 专属支持
+  custom_integration: 1            # 自定义集成
+  white_label: 1                   # 白标服务
+
+# 积分策略
+credit_policies:
+  reset_cycle: "monthly"           # 月度重置
+  carry_over: true                 # 允许积分结转
+  carry_over_limit: 1.0            # 可100%结转
+  allow_purchase: true             # 允许购买额外积分
+  purchase_rate: 0.005             # Max用户最优惠价格（元/积分）
+  
+  # 积分获取方式（Max额外奖励）
+  earning_rules:
+    daily_login: 50                # 每日登录奖励
+    invite_user: 500               # 邀请新用户奖励
+    complete_profile: 200          # 完善资料奖励
+    monthly_bonus: 2000            # Max月度奖励
+    yearly_bonus: 30000            # 年度忠诚奖励
+    
+  # 超额使用策略
+  overage:
+    allow: true                    # 允许超额使用
+    rate_per_credit: 0.005         # 最低超额费率（元/积分）
+    auto_purchase: true            # 可设置自动购买
+    auto_purchase_amount: 10000    # 自动购买数量
+
+# Max用户特权
+privileges:
+  priority_queue: true             # 最高优先级队列
+  batch_processing: true           # 批量处理
+  custom_models: true              # 自定义模型配置
+  advanced_analytics: true         # 高级分析功能
+  dedicated_server: false          # 专属服务器（可选）
+  sla_guarantee: true              # SLA保证
+  custom_deployment: true          # 自定义部署
+  
+  # 团队功能
+  team_management: true            # 团队管理
+  sub_accounts: 10                 # 可创建10个子账号
+  shared_credits: true             # 积分共享池
+  
+# 合规性配置
+compliance:
+  data_residency: "global"         # 数据存储区域
+  encryption: "aes256"             # 加密标准
+  gdpr_compliant: true             # GDPR合规
+  audit_logs: true                 # 审计日志
+  
+# 通知设置
+notifications:
+  low_credit_threshold: 5000      # 积分低于5000时提醒
+  usage_report: "realtime"        # 实时使用报告
+  monthly_summary: true            # 月度总结报告
+  api_webhooks: true               # Webhook通知支持

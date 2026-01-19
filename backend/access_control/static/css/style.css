@@ -1,0 +1,189 @@
+/* 全局样式设置 */
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+body {
+    font-family: 'Arial', sans-serif;
+    background: linear-gradient(135deg, #0f172a, #1e293b);
+    color: #e2e8f0;
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+}
+
+.container {
+    width: 100%;
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 0 1rem;
+    flex: 1;
+}
+
+/* 头部样式 */
+.header {
+    background-color: rgba(15, 23, 42, 0.8);
+    backdrop-filter: blur(10px);
+    border-bottom: 1px solid rgba(99, 179, 237, 0.3);
+    padding: 1rem 0;
+    margin-bottom: 2rem;
+}
+
+.header-content {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.logo {
+    font-size: 1.5rem;
+    font-weight: bold;
+    color: #60a5fa;
+    text-shadow: 0 0 15px rgba(96, 165, 250, 0.5);
+    letter-spacing: 1px;
+}
+
+.user-status {
+    font-size: 0.9rem;
+    color: #94a3b8;
+}
+
+/* 主内容区域 */
+.main-content {
+    padding: 2rem 0;
+}
+
+/* 卡片样式 */
+.card {
+    background-color: rgba(30, 41, 59, 0.7);
+    border-radius: 10px;
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+    padding: 2rem;
+    margin-bottom: 2rem;
+    border: 1px solid rgba(99, 179, 237, 0.2);
+    backdrop-filter: blur(5px);
+}
+
+.card-title {
+    font-size: 1.5rem;
+    color: #60a5fa;
+    margin-bottom: 1.5rem;
+    text-align: center;
+}
+
+/* 表单样式 */
+.form-group {
+    margin-bottom: 1.5rem;
+}
+
+label {
+    display: block;
+    margin-bottom: 0.5rem;
+    color: #94a3b8;
+}
+
+input[type="text"],
+textarea,
+select {
+    width: 100%;
+    padding: 0.75rem;
+    background-color: rgba(51, 65, 85, 0.5);
+    border: 1px solid rgba(99, 179, 237, 0.3);
+    border-radius: 6px;
+    color: #e2e8f0;
+    transition: all 0.3s;
+}
+
+input[type="text"]:focus,
+textarea:focus,
+select:focus {
+    outline: none;
+    border-color: #60a5fa;
+    box-shadow: 0 0 0 3px rgba(96, 165, 250, 0.2);
+}
+
+.btn {
+    background: linear-gradient(45deg, #3b82f6, #60a5fa);
+    color: white;
+    border: none;
+    padding: 0.75rem 1.5rem;
+    border-radius: 6px;
+    cursor: pointer;
+    font-weight: bold;
+    letter-spacing: 0.5px;
+    transition: all 0.3s;
+    text-align: center;
+    display: inline-block;
+    box-shadow: 0 4px 6px rgba(59, 130, 246, 0.3);
+}
+
+.btn:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 10px rgba(59, 130, 246, 0.4);
+}
+
+/* 选择框样式 */
+.checkbox-container {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.75rem;
+    margin: 1rem 0;
+}
+
+.checkbox-item {
+    background-color: rgba(51, 65, 85, 0.5);
+    border-radius: 6px;
+    padding: 0.5rem 1rem;
+    display: flex;
+    align-items: center;
+    border: 1px solid rgba(99, 179, 237, 0.2);
+}
+
+.checkbox-item input[type="checkbox"] {
+    margin-right: 0.5rem;
+}
+
+/* 错误消息 */
+.error-message {
+    background-color: rgba(239, 68, 68, 0.2);
+    color: #fca5a5;
+    padding: 0.75rem;
+    border-radius: 6px;
+    margin-bottom: 1.5rem;
+    border-left: 4px solid #ef4444;
+}
+
+/* 页脚样式 */
+.footer {
+    background-color: rgba(15, 23, 42, 0.8);
+    backdrop-filter: blur(10px);
+    padding: 1rem 0;
+    border-top: 1px solid rgba(99, 179, 237, 0.3);
+    margin-top: auto;
+}
+
+.footer-content {
+    text-align: center;
+    color: #94a3b8;
+    font-size: 0.9rem;
+}
+
+/* 登录页面特殊样式 */
+.login-container {
+    max-width: 500px;
+    margin: 3rem auto;
+}
+
+/* 响应式设计 */
+@media (max-width: 768px) {
+    .header-content {
+        flex-direction: column;
+        gap: 0.5rem;
+    }
+    
+    .card {
+        padding: 1.5rem;
+    }
+}

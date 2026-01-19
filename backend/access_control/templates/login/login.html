@@ -1,0 +1,32 @@
+{% extends "components/base.html" %}
+
+{% block title %}登录 | CHAGEE X{% endblock %}
+
+{% block content %}
+<div class="login-container">
+    <div class="card">
+        <h2 class="card-title">欢迎使用 CHAGEE X</h2>
+        <p class="text-center" style="margin-bottom: 2rem;">请使用飞书账号登录以访问系统</p>
+        
+        <div class="form-group" style="text-align: center;">
+            {# 构建认证中心的URL，并附带回调参数 #}
+            {% url 'authentication:feishu-login' as auth_url_base %}
+            {% if callback_url or action %}
+                {% if callback_url and action %}
+                    <a href="{{ auth_center_url }}?callback_url={{ callback_url|urlencode }}&action={{ action|urlencode }}" class="btn">
+                {% elif callback_url %}
+                    <a href="{{ auth_center_url }}?callback_url={{ callback_url|urlencode }}" class="btn">
+                {% elif action %}
+                    <a href="{{ auth_center_url }}?action={{ action|urlencode }}" class="btn">
+                {% else %}
+                    <a href="{{ auth_center_url }}" class="btn">
+                {% endif %}
+            {% else %}
+                 <a href="{{ auth_center_url }}" class="btn">
+            {% endif %}
+                <span>飞书登录</span>
+            </a>
+        </div>
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,242 @@
+// public/sandbox/editModeScript.js
+(function() {
+  console.log('[EditModeScript] Loaded');
+
+  // --- Configuration ---
+  const TARGET_SELECTOR = '.slide-content-wrapper'; // Target area for text selection
+  const MENU_ID = 'text-style-menu';
+  // 注意：这些指令定义必须与后端保持一致
+  const commandInstructions = {
+    'bold': '将选中文本设置为粗体',
+    'italic': '将选中文本设置为斜体',
+    'underline': '将选中文本设置为下划线',
+    'replace': '将选中文本替换为新内容', // Base instruction for replace
+  };
+
+  // --- State ---
+  let styleMenuElement = null;
+  let currentSelectedText = '';
+  let currentSelectionRange = null;
+
+  // --- Menu Creation ---
+  function createStyleMenu() {
+    if (document.getElementById(MENU_ID)) {
+      return document.getElementById(MENU_ID);
+    }
+
+    const menu = document.createElement('div');
+    menu.id = MENU_ID;
+    // Basic Styling (inline for simplicity in sandbox)
+    Object.assign(menu.style, {
+        position: 'absolute',
+        zIndex: '10000',
+        background: 'white',
+        border: '1px solid #ccc',
+        borderRadius: '4px',
+        boxShadow: '0 2px 5px rgba(0,0,0,0.2)',
+        padding: '5px',
+        display: 'none', // Initially hidden
+        fontFamily: 'sans-serif',
+        fontSize: '14px',
+        whiteSpace: 'nowrap' // Prevent buttons wrapping
+    });
+
+    Object.keys(commandInstructions).forEach(command => {
+      const button = document.createElement('button');
+      button.dataset.command = command;
+      // Basic button styling
+       Object.assign(button.style, {
+            margin: '2px',
+            padding: '3px 8px',
+            border: '1px solid #ddd',
+            background: '#f8f8f8',
+            cursor: 'pointer',
+            borderRadius: '3px',
+            fontSize: 'inherit' // Inherit font size from menu
+       });
+
+      // More specific labels
+      switch(command) {
+          case 'bold': button.textContent = '加粗'; break;
+          case 'italic': button.textContent = '斜体'; break;
+          case 'underline': button.textContent = '下划线'; break;
+          case 'replace': button.textContent = '替换...'; break;
+          default: button.textContent = command.charAt(0).toUpperCase() + command.slice(1);
+      }
+
+      menu.appendChild(button);
+    });
+
+    document.body.appendChild(menu);
+    return menu;
+  }
+
+  // --- Menu Positioning and Visibility ---
+  function positionAndShowMenu(menu, range) {
+    if (!menu || !range) return;
+    const rect = range.getBoundingClientRect();
+
+    // Calculate initial position (above the end of selection)
+    let top = window.scrollY + rect.top - menu.offsetHeight - 5;
+    let left = window.scrollX + rect.left + (rect.width / 2) - (menu.offsetWidth / 2);
+
+    // Adjust if menu goes off-screen top
+    if (top < window.scrollY) {
+        top = window.scrollY + rect.bottom + 5; // Move below selection
+    }
+    // Adjust if menu goes off-screen left
+    if (left < window.scrollX) {
+        left = window.scrollX + 5;
+    }
+    // Adjust if menu goes off-screen right
+    if (left + menu.offsetWidth > window.scrollX + window.innerWidth) {
+        left = window.scrollX + window.innerWidth - menu.offsetWidth - 5;
+    }
+     // Adjust if menu goes off-screen bottom (less likely if positioned above/below)
+    if (top + menu.offsetHeight > window.scrollY + window.innerHeight) {
+         // If it also didn't fit above, it might be a large selection or small screen.
+         // We could try centering it vertically, but for now, just cap it.
+         top = window.scrollY + window.innerHeight - menu.offsetHeight - 5;
+    }
+
+    menu.style.top = `${top}px`;
+    menu.style.left = `${left}px`;
+    menu.style.display = 'block';
+    console.log('[EditModeScript] Menu shown');
+  }
+
+  function hideMenu(menu) {
+    if (menu && menu.style.display !== 'none') {
+      menu.style.display = 'none';
+      console.log('[EditModeScript] Menu hidden');
+    }
+    currentSelectedText = ''; // Clear selection when hiding
+    currentSelectionRange = null;
+  }
+
+  // --- Selection Check ---
+  function isSelectionInTargetArea(selection) {
+    if (!selection || selection.rangeCount === 0) {
+      return false;
+    }
+    const range = selection.getRangeAt(0);
+    // Use range.startContainer or commonAncestorContainer depending on desired behavior
+    const container = range.commonAncestorContainer;
+    const targetElement = document.querySelector(TARGET_SELECTOR);
+
+    if (!targetElement) {
+        console.warn(`[EditModeScript] Target element "${TARGET_SELECTOR}" not found.`);
+        // Decide behavior: allow anywhere or restrict? Restricting seems safer.
+        return false;
+    }
+
+    // Check if the selection's container is the target or inside the target
+    const nodeToCheck = container.nodeType === Node.TEXT_NODE ? container.parentElement : container;
+    return targetElement.contains(nodeToCheck);
+  }
+
+  // --- Event Listeners ---
+  document.addEventListener('mouseup', (event) => {
+    // Use setTimeout to allow potential click events on the menu to register first,
+    // and to ensure selection state is finalized.
+    setTimeout(() => {
+        const selection = window.getSelection();
+        const selectedText = selection.toString().trim();
+
+        // Only show menu if selection is not empty and within the target area
+        if (selectedText && isSelectionInTargetArea(selection)) {
+            currentSelectedText = selectedText;
+            currentSelectionRange = selection.getRangeAt(0).cloneRange(); // Store range
+            if (!styleMenuElement) {
+                styleMenuElement = createStyleMenu(); // Ensure menu exists
+            }
+            // Check if the mouseup event target is inside the menu itself
+            if (styleMenuElement && !styleMenuElement.contains(event.target)) {
+                 positionAndShowMenu(styleMenuElement, currentSelectionRange);
+            } else if (!styleMenuElement) {
+                 console.error("[EditModeScript] Failed to get menu element for positioning.");
+            }
+        } else {
+            // If mouseup is outside the menu and selection is lost or invalid, hide menu
+            if (styleMenuElement && !styleMenuElement.contains(event.target)) {
+                 hideMenu(styleMenuElement);
+            }
+        }
+    }, 0);
+  });
+
+  document.addEventListener('mousedown', (event) => {
+    // Hide menu if clicking outside of it, unless the click starts a new selection inside the target
+    if (styleMenuElement && styleMenuElement.style.display !== 'none' && !styleMenuElement.contains(event.target)) {
+        const selection = window.getSelection();
+        // Check if the click target is within the allowed editing area
+        const targetElement = document.querySelector(TARGET_SELECTOR);
+        const isClickInTarget = targetElement && targetElement.contains(event.target);
+
+        // Hide immediately if click is outside target area.
+        // If inside, the mouseup listener will handle showing/hiding based on selection result.
+        if (!isClickInTarget) {
+             hideMenu(styleMenuElement);
+        }
+    }
+  });
+
+  // --- Menu Interaction ---
+  function handleMenuClick(event) {
+    // Ensure the click is directly on a button with a command
+    const button = event.target.closest('button[data-command]');
+    if (button && styleMenuElement && styleMenuElement.contains(button)) {
+      const command = button.dataset.command;
+      let promptResult = null; // Variable to store prompt result if needed
+      let proceed = true;
+      const selectedTextToSend = currentSelectedText; // Use the stored text
+
+      if (!selectedTextToSend) {
+          console.warn('[EditModeScript] No selected text stored for command:', command);
+          hideMenu(styleMenuElement);
+          return;
+      }
+
+      if (command === 'replace') {
+        // Use a more specific prompt message
+        promptResult = prompt(`将选中的文本 "${selectedTextToSend}" 替换为:`, selectedTextToSend); // Assign to promptResult
+        if (promptResult === null) { // Check for cancellation (prompt returns null)
+          proceed = false; // User cancelled
+        }
+      }
+
+      if (proceed) {
+        const payload = { // Build base payload
+          selectedText: selectedTextToSend,
+          action: command,
+        };
+
+        if (command === 'replace') {
+          // Add newText to payload only for 'replace' command
+          payload.newText = promptResult; // Use promptResult here
+        }
+        
+        console.log('[EditModeScript] Attempting to send postMessage with payload:', payload);
+        window.parent.postMessage({
+          type: 'requestTextModification',
+          payload
+        }, '*'); // IMPORTANT: Replace '*' with the specific origin of the parent window in production for security
+      }
+
+      console.log('[EditModeScript] After postMessage attempt (if proceed was true)'); // <-- 添加日志
+      // Hide menu after action or cancellation (if prompt was shown)
+      hideMenu(styleMenuElement);
+    }
+  }
+
+  // --- Initialization ---
+  // Create the menu element on script load
+  styleMenuElement = createStyleMenu();
+  if (styleMenuElement) {
+      // Use event delegation on the menu for clicks
+      styleMenuElement.addEventListener('click', handleMenuClick);
+  } else {
+      console.error('[EditModeScript] Failed to create or find the style menu on initialization.');
+  }
+
+})();

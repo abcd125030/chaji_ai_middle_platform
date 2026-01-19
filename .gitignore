@@ -1,0 +1,93 @@
+# OS generated files
+.DS_Store
+Thumbs.db
+*.pid
+
+
+# Editor directories and files
+.idea/
+.vscode/
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
+*.sw?
+
+# Node.js
+node_modules/
+dist/
+.pnpm-store/
+.npm/
+.node_repl_history
+.node-version
+.nvmrc
+
+# Vue.js
+.env.local
+.env.*.local
+
+# Logs
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+*.log*
+
+# Python & Django
+__pycache__/
+*.py[cod]
+.venv/
+venv/
+*.egg-info/
+db.sqlite3
+.coverage
+.pytest_cache/
+staticfiles/
+.python-version
+
+# Environment variables
+*.env
+.env
+.env.*
+!.env.example
+
+# Tailwind CSS
+.tailwind-cache/
+
+# 杂七杂八
+agentic_sample_codes/
+# Celery
+backend/control/
+celerybeat-schedule.db
+celerybeat.pid
+celerybeat-schedule
+.old_*
+
+# Debug files
+backend/debug_*.py
+backend/media/*
+outputs/
+
+# Test outputs and backups
+backend/agentic/tests/outputs/
+.backups/
+
+# sample media files
+web/public/video/*
+
+# AI Coder CLIs
+.gemini/
+.qwen/
+
+# Backup files and temporary directories
+.backups/
+
+
+# PDF files
+*.pdf
+
+# Prompts configuration file (contains sensitive prompts)
+backend/customized/image_editor/prompts_config.py
+
+# 临时研究/调研文档目录
+projects/

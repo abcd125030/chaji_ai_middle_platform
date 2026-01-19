@@ -1,0 +1,547 @@
+{% extends "admin/base_site.html" %}
+{% load i18n static jazzmin %}
+
+{% block extrastyle %}
+{{ block.super }}
+<style>
+    /* 统计卡片样式 - 遵循前端设计指南 */
+    .dashboard-stats {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+        gap: 24px;  /* var(--spacing-lg) */
+        margin-bottom: 48px;  /* var(--spacing-2xl) */
+    }
+
+    .stat-card {
+        background: var(--color-background-secondary, #0A0A0A);
+        border: 1px solid var(--color-border-secondary, #1A1A1A);
+        border-radius: 12px;  /* var(--radius-lg) */
+        padding: 24px;
+        transition: all 200ms ease;
+        position: relative;
+        overflow: hidden;
+    }
+
+    .stat-card::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 4px;
+        height: 100%;
+        background: linear-gradient(180deg, #FFFFFF 0%, #ADADAD 100%);
+    }
+
+    .stat-card:hover {
+        border-color: var(--color-text-muted, #888888);
+        transform: translateY(-2px);
+    }
+
+    .stat-card.primary::before { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); }
+    .stat-card.success::before { background: linear-gradient(135deg, #43e97b 0%, #38f9d7 100%); }
+    .stat-card.warning::before { background: linear-gradient(135deg, #fa709a 0%, #fee140 100%); }
+    .stat-card.danger::before { background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%); }
+    .stat-card.info::before { background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%); }
+
+    .stat-card h3 {
+        margin: 0 0 16px 0;
+        color: var(--color-text-secondary, #ADADAD);
+        font-size: 12px;
+        font-weight: 600;
+        text-transform: uppercase;
+        letter-spacing: 1px;
+    }
+
+    .stat-value {
+        font-size: 48px;  /* 大标题尺寸 */
+        font-weight: 700;
+        background: linear-gradient(180deg, #FFFFFF 0%, #ADADAD 100%);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        background-clip: text;
+        margin: 16px 0;
+        line-height: 1;
+    }
+
+    .stat-detail {
+        font-size: 14px;
+        color: var(--color-text-muted, #888888);
+        margin-top: 16px;
+        display: flex;
+        flex-wrap: wrap;
+        gap: 16px;
+    }
+
+    .stat-detail span {
+        display: inline-block;
+        margin-right: 15px;
+    }
+
+    .quick-actions {
+        background: var(--color-background-secondary, #0A0A0A);
+        border: 1px solid var(--color-border-secondary, #1A1A1A);
+        border-radius: 12px;
+        padding: 32px;
+        margin-bottom: 48px;
+    }
+
+    .quick-actions h2 {
+        margin: 0 0 24px 0;
+        color: var(--color-text-primary, #FFFFFF);
+        font-size: 24px;
+        font-weight: 600;
+    }
+
+    .action-buttons {
+        display: flex;
+        gap: 12px;
+        flex-wrap: wrap;
+    }
+
+    .action-btn {
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        padding: 12px 24px;
+        background: var(--color-button-primary, #EDEDED);
+        color: var(--color-button-text, #0A0A0A) !important;
+        text-decoration: none;
+        border: 2px solid var(--color-button-text, #0A0A0A);
+        border-radius: 8px;
+        font-size: 14px;
+        font-weight: 500;
+        transition: all 200ms ease;
+    }
+
+    .action-btn:hover {
+        background: var(--color-text-primary, #FFFFFF);
+        color: var(--color-background, #000000) !important;
+        border-color: var(--color-background, #000000);
+        transform: translateY(-2px);
+        text-decoration: none;
+    }
+
+    .recent-items {
+        margin-top: 48px;
+    }
+
+    .recent-items h2 {
+        color: var(--color-text-primary, #FFFFFF);
+        font-size: 24px;
+        font-weight: 600;
+        margin-bottom: 24px;
+    }
+
+    .recent-list {
+        background: var(--color-background-secondary, #0A0A0A);
+        border: 1px solid var(--color-border-secondary, #1A1A1A);
+        border-radius: 12px;
+        overflow: hidden;
+    }
+
+    .recent-list table {
+        width: 100%;
+        border-collapse: collapse;
+    }
+
+    .recent-list th {
+        background: var(--color-background-hover, #1A1A1A);
+        padding: 16px;
+        text-align: left;
+        font-size: 12px;
+        font-weight: 600;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+        color: var(--color-text-secondary, #ADADAD);
+        border-bottom: 1px solid var(--color-border-secondary, #1A1A1A);
+    }
+
+    .recent-list td {
+        padding: 16px;
+        color: var(--color-text-primary, #FFFFFF);
+        border-bottom: 1px solid var(--color-border-secondary, #1A1A1A);
+    }
+
+    .recent-list tr:hover td {
+        background: var(--color-background-hover, #1A1A1A);
+    }
+
+    .recent-list tr:last-child td {
+        border-bottom: none;
+    }
+
+    .recent-list a {
+        color: var(--color-button-primary, #EDEDED);
+        text-decoration: none;
+        transition: color 200ms ease;
+    }
+
+    .recent-list a:hover {
+        color: var(--color-text-primary, #FFFFFF);
+    }
+
+    .status-badge {
+        display: inline-block;
+        padding: 4px 12px;
+        border-radius: 6px;
+        font-size: 11px;
+        font-weight: 600;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+    }
+
+    .status-completed {
+        background: rgba(67, 233, 123, 0.1);
+        color: #43e97b;
+        border: 1px solid #43e97b;
+    }
+    .status-running {
+        background: rgba(79, 172, 254, 0.1);
+        color: #4facfe;
+        border: 1px solid #4facfe;
+    }
+    .status-failed {
+        background: rgba(240, 147, 251, 0.1);
+        color: #f093fb;
+        border: 1px solid #f093fb;
+    }
+    .status-pending {
+        background: rgba(250, 112, 154, 0.1);
+        color: #fa709a;
+        border: 1px solid #fa709a;
+    }
+
+    /* 应用模块 - 遵循前端设计指南 */
+    .app-card {
+        background: var(--color-background-secondary, #0A0A0A);
+        border: 1px solid var(--color-border-secondary, #1A1A1A);
+        border-radius: 12px;
+        margin-bottom: 24px;
+        overflow: hidden;
+        transition: all 200ms ease;
+    }
+
+    .app-card:hover {
+        border-color: var(--color-text-muted, #888888);
+        transform: translateY(-2px);
+    }
+
+    .app-card .card-header {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white;
+        padding: 20px 24px;
+        font-size: 16px;
+        font-weight: 600;
+        letter-spacing: 0.3px;
+    }
+
+    .app-card .card-body {
+        padding: 24px;
+        background: var(--color-background-secondary, #0A0A0A);
+    }
+
+    .app-card .model-list {
+        list-style: none;
+        padding: 0;
+        margin: 0;
+    }
+
+    .app-card .model-list li {
+        padding: 12px 0;
+        border-bottom: 1px solid var(--color-border-secondary, #1A1A1A);
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+    }
+
+    .app-card .model-list li:last-child {
+        border-bottom: none;
+    }
+
+    .app-card .model-list a {
+        color: var(--color-text-primary, #FFFFFF);
+        text-decoration: none;
+        font-weight: 500;
+        transition: color 200ms ease;
+    }
+
+    .app-card .model-list a:hover {
+        color: var(--color-button-primary, #EDEDED);
+        text-decoration: none;
+    }
+
+    .app-card .model-actions {
+        display: flex;
+        gap: 8px;
+    }
+
+    .app-card .model-actions a {
+        padding: 6px 12px;
+        border-radius: 6px;
+        font-size: 12px;
+        font-weight: 500;
+        text-decoration: none;
+        transition: all 200ms ease;
+    }
+
+    .app-card .addlink {
+        background: rgba(67, 233, 123, 0.1);
+        color: #43e97b;
+        border: 1px solid #43e97b;
+    }
+
+    .app-card .addlink:hover {
+        background: #43e97b;
+        color: var(--color-background, #000000);
+    }
+
+    .app-card .changelink {
+        background: rgba(79, 172, 254, 0.1);
+        color: #4facfe;
+        border: 1px solid #4facfe;
+    }
+
+    .app-card .changelink:hover {
+        background: #4facfe;
+        color: var(--color-background, #000000);
+    }
+
+    /* 为不同类型的模块设置不同的渐变色 - 遵循设计指南 */
+    .app-card:nth-child(1) .card-header {
+        background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+    }
+    .app-card:nth-child(2) .card-header {
+        background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
+    }
+    .app-card:nth-child(3) .card-header {
+        background: linear-gradient(135deg, #43e97b 0%, #38f9d7 100%);
+    }
+    .app-card:nth-child(4) .card-header {
+        background: linear-gradient(135deg, #fa709a 0%, #fee140 100%);
+    }
+    .app-card:nth-child(5) .card-header {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    }
+    .app-card:nth-child(6) .card-header {
+        background: linear-gradient(135deg, #ffd200 0%, #f7971e 100%);
+    }
+
+    /* 页面标题样式 */
+    .dashboard-page-title {
+        font-size: 48px;
+        font-weight: 700;
+        background: linear-gradient(180deg, #FFFFFF 0%, #ADADAD 100%);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        background-clip: text;
+        margin-bottom: 48px;
+        letter-spacing: -1px;
+    }
+
+    /* 响应式布局 */
+    @media (max-width: 768px) {
+        .dashboard-stats {
+            grid-template-columns: 1fr;
+        }
+
+        .action-buttons {
+            flex-direction: column;
+        }
+
+        .action-btn {
+            width: 100%;
+            justify-content: center;
+        }
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+{% get_side_menu using="app_list" as dashboard_list %}
+<div id="content-main">
+    <!-- 页面标题 -->
+    <h1 class="dashboard-page-title">AI 中台管理系统</h1>
+
+    {% if stats %}
+    <!-- 统计卡片区域 -->
+    <div class="dashboard-stats">
+        {% if stats.agentic %}
+        <div class="stat-card primary">
+            <h3>Agentic 工作流</h3>
+            <div class="stat-value">{{ stats.agentic.graph_count }}</div>
+            <div class="stat-detail">
+                <span>✅ 完成: {{ stats.agentic.task_completed }}</span>
+                <span>🔄 运行: {{ stats.agentic.task_running }}</span>
+                <span>❌ 失败: {{ stats.agentic.task_failed }}</span>
+            </div>
+        </div>
+        {% endif %}
+
+        {% if stats.agentic_graph %}
+        <div class="stat-card info">
+            <h3>Agentic Graph 引擎</h3>
+            <div class="stat-value">{{ stats.agentic_graph.execution_total }}</div>
+            <div class="stat-detail">
+                <span>📊 活跃图: {{ stats.agentic_graph.graph_count }}</span>
+                <span>📈 今日执行: {{ stats.agentic_graph.execution_today }}</span>
+            </div>
+        </div>
+        {% endif %}
+
+        {% if stats.sessions %}
+        <div class="stat-card success">
+            <h3>对话统计</h3>
+            <div class="stat-value">{{ stats.sessions.chat_total }}</div>
+            <div class="stat-detail">
+                <span>💬 总对话: {{ stats.sessions.chat_total }}</span>
+                <span>📅 今日: {{ stats.sessions.chat_today }}</span>
+            </div>
+        </div>
+        {% endif %}
+
+        {% if stats.knowledge %}
+        <div class="stat-card warning">
+            <h3>知识库</h3>
+            <div class="stat-value">{{ stats.knowledge.kb_count }}</div>
+            <div class="stat-detail">
+                <span>📚 活跃集合: {{ stats.knowledge.collection_active }}</span>
+                <span>⏳ 处理中: {{ stats.knowledge.collection_processing }}</span>
+            </div>
+        </div>
+        {% endif %}
+
+        {% if stats.users %}
+        <div class="stat-card danger">
+            <h3>用户统计</h3>
+            <div class="stat-value">{{ stats.users.total }}</div>
+            <div class="stat-detail">
+                <span>👤 活跃: {{ stats.users.active }}</span>
+                <span>👨‍💼 管理员: {{ stats.users.staff }}</span>
+                <span>🆕 今日新增: {{ stats.users.new_today }}</span>
+            </div>
+        </div>
+        {% endif %}
+    </div>
+    {% endif %}
+
+    <!-- 快速操作区域 -->
+    <div class="quick-actions">
+        <h2>快速操作</h2>
+        <div class="action-buttons">
+            <a href="/admin/agentic/graph/add/" class="action-btn">➕ 创建工作流图</a>
+            <a href="/admin/agentic_graph/graphdefinition/add/" class="action-btn">➕ 创建Graph定义</a>
+            <a href="/admin/webapps/chat/chathistory/" class="action-btn">💬 查看对话记录</a>
+            <a href="/admin/knowledge/knowledgecollection/" class="action-btn">📚 管理知识库</a>
+            <a href="/admin/dashboard/" class="action-btn">📊 系统仪表板</a>
+            <a href="/admin/stats/" class="action-btn">📈 详细统计</a>
+        </div>
+    </div>
+
+    <!-- 最近的任务执行 -->
+    {% if recent_tasks or recent_executions %}
+    <div class="recent-items">
+        {% if recent_tasks %}
+        <h2>最近的 Agentic 任务</h2>
+        <div class="recent-list">
+            <table>
+                <thead>
+                    <tr>
+                        <th>任务ID</th>
+                        <th>图名称</th>
+                        <th>状态</th>
+                        <th>创建时间</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for task in recent_tasks %}
+                    <tr>
+                        <td><a href="/admin/agentic/agenttask/{{ task.id }}/change/">{{ task.task_id|truncatechars:20 }}</a></td>
+                        <td>{{ task.graph.name }}</td>
+                        <td><span class="status-badge status-{{ task.status }}">{{ task.status }}</span></td>
+                        <td>{{ task.created_at|date:"Y-m-d H:i:s" }}</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        {% endif %}
+
+        {% if recent_executions %}
+        <h2 style="margin-top: 20px;">最近的 Graph 执行</h2>
+        <div class="recent-list">
+            <table>
+                <thead>
+                    <tr>
+                        <th>执行ID</th>
+                        <th>图定义</th>
+                        <th>用户</th>
+                        <th>状态</th>
+                        <th>创建时间</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for exec in recent_executions %}
+                    <tr>
+                        <td><a href="/admin/agentic_graph/taskexecution/{{ exec.id }}/change/">{{ exec.id|truncatechars:12 }}</a></td>
+                        <td>{{ exec.graph.name }}</td>
+                        <td>{{ exec.user.username|default:"-" }}</td>
+                        <td><span class="status-badge status-{{ exec.status }}">{{ exec.status }}</span></td>
+                        <td>{{ exec.created_at|date:"Y-m-d H:i:s" }}</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        {% endif %}
+    </div>
+    {% endif %}
+
+    <!-- 优化后的应用列表 -->
+    {% if dashboard_list %}
+        <div class="row">
+            {% for app in dashboard_list %}
+                <div class="col-md-6 col-lg-4">
+                    <div class="app-card">
+                        <div class="card-header">
+                            <a href="{{ app.app_url }}" style="color: white; text-decoration: none;">
+                                {{ app.name }}
+                            </a>
+                        </div>
+                        <div class="card-body">
+                            <ul class="model-list">
+                                {% for model in app.models %}
+                                    <li>
+                                        <div class="model-name">
+                                            {% if model.admin_url %}
+                                                <a href="{{ model.admin_url }}">{{ model.name }}</a>
+                                            {% else %}
+                                                <span>{{ model.name }}</span>
+                                            {% endif %}
+                                        </div>
+                                        <div class="model-actions">
+                                            {% if model.add_url %}
+                                                <a href="{{ model.add_url }}" class="addlink">
+                                                    <i class="fas fa-plus"></i> 添加
+                                                </a>
+                                            {% endif %}
+                                            {% if model.admin_url %}
+                                                <a href="{{ model.admin_url }}" class="changelink">
+                                                    <i class="fas fa-edit"></i> 管理
+                                                </a>
+                                            {% endif %}
+                                        </div>
+                                    </li>
+                                {% endfor %}
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+            {% endfor %}
+        </div>
+    {% else %}
+        <p>{% trans "You don't have permission to edit anything." %}</p>
+    {% endif %}
+</div>
+{% endblock %}
+
+<!-- 不要覆盖sidebar block，让Jazzmin处理左侧菜单 -->

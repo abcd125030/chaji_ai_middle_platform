@@ -1,0 +1,167 @@
+{% extends "components/base.html" %}
+
+{% block title %}申请使用 | CHAGEE X{% endblock %}
+
+{% block content %}
+<div class="card">
+    <h2 class="card-title">申请使用 LLM 模型</h2>
+    
+    {% if error_message %}
+    <div class="error-message">
+        {{ error_message }}
+    </div>
+    {% endif %}
+    
+    <form method="post" action="{% url 'access_control:user-apply' %}">
+        {% csrf_token %}
+        <input type="hidden" name="user_id" value="{{ user_id }}">
+        
+        <div class="form-group">
+            <label for="address">接口 Client 的来源 IP（仅允许该 IP 请求服务）：</label>
+            <input type="text" id="address" name="address" required placeholder="请输入您的请求来源 IP">
+            <small class="form-text text-muted">请填写将用于访问接口的公网 IP，非该 IP 的请求将被拒绝。</small>
+        </div>
+        
+        <div class="form-group">
+            <label for="reason">申请说明（请描述业务场景）：</label>
+            <textarea id="reason" name="reason" rows="4" required placeholder="请简要说明申请原因及业务用途"></textarea>
+            <small class="form-text text-muted">请详细描述您申请使用接口的具体原因和业务需求。</small>
+        </div>
+        
+        <div class="form-group">
+            <label>当前可选用的模型：</label>
+            <div class="checkbox-container">
+                {% for option in options %}
+                <div class="checkbox-item">
+                    <input type="checkbox" id="option_{{ forloop.counter }}" name="selected_options" value="{{ option }}"
+                           {% if option in selected_options %}checked{% endif %}>
+                    <label for="option_{{ forloop.counter }}">{{ option }}</label>
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+        
+        <div class="form-group" style="text-align: center;">
+            <button type="submit" class="btn">提交申请</button>
+        </div>
+    </form>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const accessToken = localStorage.getItem('accessToken');
+    if (!accessToken) {
+        alert('您尚未登录，请先登录！');
+        // 根据你的路由配置，可能需要调整登录页面的URL
+        window.location.href = "{% url 'access_control:login-page' %}";
+        return;
+    }
+
+    const form = document.querySelector('form');
+    const checkboxContainer = document.querySelector('.checkbox-container');
+
+    // 1. 获取可用的LLM模型列表
+    fetch("{% url 'access_control:user-apply' %}", {
+        method: 'GET',
+        headers: {
+            'Authorization': 'Bearer ' + accessToken,
+            'Content-Type': 'application/json'
+        }
+    })
+    .then(response => {
+        if (response.status === 401) {
+            // Token可能已过期
+            alert('登录已过期，请重新登录。');
+            window.location.href = "{% url 'access_control:login-page' %}";
+            return Promise.reject('Unauthorized');
+        }
+        if (!response.ok) {
+            return response.json().then(err => Promise.reject(err));
+        }
+        return response.json();
+    })
+    .then(data => {
+        const models = data.available_llm_models;
+        if (models && models.length > 0) {
+            checkboxContainer.innerHTML = ''; // 清空现有内容
+            models.forEach((model, index) => {
+                const id = `option_${index}`;
+                const checkboxItem = document.createElement('div');
+                checkboxItem.className = 'checkbox-item';
+                
+                const input = document.createElement('input');
+                input.type = 'checkbox';
+                input.id = id;
+                input.name = 'selected_options';
+                input.value = model;
+
+                const label = document.createElement('label');
+                label.htmlFor = id;
+                label.textContent = model;
+
+                checkboxItem.appendChild(input);
+                checkboxItem.appendChild(label);
+                checkboxContainer.appendChild(checkboxItem);
+            });
+        } else {
+            checkboxContainer.innerHTML = '<p>当前没有可用的模型。</p>';
+        }
+    })
+    .catch(error => {
+        console.error('获取模型列表失败:', error);
+        checkboxContainer.innerHTML = `<p class="error-message">获取模型列表失败: ${error.detail || '请稍后重试'}</p>`;
+    });
+
+    // 2. 处理表单提交
+    form.addEventListener('submit', function(event) {
+        event.preventDefault(); // 阻止表单默认提交
+
+        const address = document.getElementById('address').value;
+        const reason = document.getElementById('reason').value;
+        const selectedOptions = Array.from(document.querySelectorAll('input[name="selected_options"]:checked')).map(cb => cb.value);
+
+        if (!reason) {
+            alert('请填写使用原因。');
+            return;
+        }
+        if (selectedOptions.length === 0) {
+            alert('请至少选择一个模型。');
+            return;
+        }
+
+        const formData = {
+            address: address,
+            reason: reason,
+            selected_options: selectedOptions
+        };
+
+        fetch("{% url 'access_control:user-apply' %}", {
+            method: 'POST',
+            headers: {
+                'Authorization': 'Bearer ' + accessToken,
+                'Content-Type': 'application/json',
+                'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value
+            },
+            body: JSON.stringify(formData)
+        })
+        .then(response => response.json().then(data => ({ status: response.status, body: data })))
+        .then(({ status, body }) => {
+            if (status === 201 || status === 200) {
+                alert(body.message || '申请提交成功！');
+                form.reset();
+            } else if (status === 409) {
+                alert(body.message || '您已提交过申请，请勿重复提交。');
+            } else {
+                alert(`申请失败: ${body.error || '未知错误'}`);
+            }
+        })
+        .catch(error => {
+            console.error('提交申请时出错:', error);
+            alert('提交申请时发生网络错误，请稍后重试。');
+        });
+    });
+});
+</script>
+{% endblock %}

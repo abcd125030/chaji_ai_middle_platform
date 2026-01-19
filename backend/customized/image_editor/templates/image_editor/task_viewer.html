@@ -1,0 +1,407 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>图片编辑任务查看器</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+        
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 20px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+            overflow: hidden;
+        }
+        
+        .header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 30px;
+            text-align: center;
+        }
+        
+        .header h1 {
+            font-size: 2.5em;
+            margin-bottom: 10px;
+        }
+        
+        .task-info {
+            background: rgba(255,255,255,0.1);
+            border-radius: 10px;
+            padding: 15px;
+            margin-top: 20px;
+            backdrop-filter: blur(10px);
+        }
+        
+        .task-info p {
+            margin: 5px 0;
+            font-size: 0.95em;
+        }
+        
+        .navigation {
+            display: flex;
+            justify-content: center;
+            gap: 20px;
+            padding: 20px;
+            background: #f8f9fa;
+        }
+        
+        .nav-btn {
+            padding: 12px 30px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            border-radius: 50px;
+            font-size: 16px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 15px rgba(102, 126, 234, 0.4);
+        }
+        
+        .nav-btn:hover:not(:disabled) {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(102, 126, 234, 0.6);
+        }
+        
+        .nav-btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+        
+        .task-counter {
+            display: flex;
+            align-items: center;
+            padding: 10px 20px;
+            background: white;
+            border-radius: 50px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            font-weight: 600;
+            color: #333;
+        }
+        
+        .content {
+            padding: 30px;
+        }
+        
+        .images-container {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 30px;
+            margin-bottom: 30px;
+        }
+        
+        .image-box {
+            background: #f8f9fa;
+            border-radius: 15px;
+            padding: 20px;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+        }
+        
+        .image-box h3 {
+            color: #333;
+            margin-bottom: 15px;
+            font-size: 1.3em;
+        }
+        
+        .image-wrapper {
+            position: relative;
+            width: 100%;
+            padding-bottom: 75%;
+            background: white;
+            border-radius: 10px;
+            overflow: hidden;
+            box-shadow: 0 3px 10px rgba(0,0,0,0.1);
+        }
+        
+        .image-wrapper img {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            object-fit: contain;
+        }
+        
+        .image-placeholder {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            text-align: center;
+            color: #999;
+        }
+        
+        .prompt-section {
+            background: #f8f9fa;
+            border-radius: 15px;
+            padding: 25px;
+            margin-top: 30px;
+        }
+        
+        .prompt-section h3 {
+            color: #333;
+            margin-bottom: 15px;
+            font-size: 1.3em;
+        }
+        
+        .prompt-box {
+            background: white;
+            border-left: 4px solid #667eea;
+            padding: 15px;
+            border-radius: 5px;
+            margin-bottom: 15px;
+        }
+        
+        .prompt-box h4 {
+            color: #667eea;
+            margin-bottom: 10px;
+            font-size: 0.9em;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+        
+        .prompt-box p {
+            color: #555;
+            line-height: 1.6;
+            font-size: 1em;
+        }
+        
+        .error-message {
+            background: #fee;
+            border-left: 4px solid #f44;
+            color: #c00;
+            padding: 15px;
+            border-radius: 5px;
+            margin: 20px 0;
+        }
+        
+        .loading {
+            text-align: center;
+            padding: 50px;
+            color: #999;
+        }
+        
+        .spinner {
+            display: inline-block;
+            width: 50px;
+            height: 50px;
+            border: 3px solid rgba(102, 126, 234, 0.3);
+            border-radius: 50%;
+            border-top-color: #667eea;
+            animation: spin 1s ease-in-out infinite;
+        }
+        
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🎨 图片编辑任务查看器</h1>
+            {% if task %}
+            <div class="task-info">
+                <p><strong>任务ID:</strong> {{ task.task_id }}</p>
+                <p><strong>用户:</strong> {{ task.user.username }} (ID: {{ task.user.id }})</p>
+                <p><strong>状态:</strong> {{ task.get_status_display }}</p>
+                <p><strong>创建时间:</strong> {{ task.created_at|date:"Y-m-d H:i:s" }}</p>
+                {% if task.processing_time %}
+                <p><strong>处理时长:</strong> {{ task.processing_time|floatformat:2 }} 秒</p>
+                {% endif %}
+            </div>
+            {% endif %}
+        </div>
+        
+        <div class="navigation">
+            <button class="nav-btn" onclick="navigateTask('prev')" {% if not has_prev %}disabled{% endif %}>
+                ← 上一个
+            </button>
+            <div class="task-counter">
+                第 {{ current_index }} / {{ total_count }} 个任务（最新30个）
+            </div>
+            <button class="nav-btn" onclick="navigateTask('next')" {% if not has_next %}disabled{% endif %}>
+                下一个 →
+            </button>
+        </div>
+        
+        <div class="content">
+            {% if task %}
+                {% if task.status == 'success' %}
+                <div class="images-container">
+                    <div class="image-box">
+                        <h3>📷 原始图片</h3>
+                        <div class="image-wrapper">
+                            {% if task.image_url %}
+                            <img src="{{ task.image_url }}" alt="原始图片" onerror="this.style.display='none'; this.nextElementSibling.style.display='block';">
+                            <div class="image-placeholder" style="display: none;">
+                                <p>图片加载失败</p>
+                            </div>
+                            {% else %}
+                            <div class="image-placeholder">
+                                <p>无原始图片</p>
+                            </div>
+                            {% endif %}
+                        </div>
+                    </div>
+                    
+                    <div class="image-box">
+                        <h3>✨ 最终结果（抠图后）</h3>
+                        <div class="image-wrapper">
+                            {% if task.result_image_data_url %}
+                            <img src="{{ task.result_image_data_url }}" alt="最终结果图片">
+                            {% elif task.result_image_path %}
+                            <img src="/media/{{ task.result_image_path }}" alt="最终结果图片" onerror="this.style.display='none'; this.nextElementSibling.style.display='block';">
+                            <div class="image-placeholder" style="display: none;">
+                                <p>图片加载失败</p>
+                            </div>
+                            {% elif task.generated_image_url %}
+                            <img src="{{ task.generated_image_url }}" alt="AI生成图片（未抠图）" onerror="this.style.display='none'; this.nextElementSibling.style.display='block';">
+                            <div class="image-placeholder" style="display: none;">
+                                <p>图片加载失败</p>
+                            </div>
+                            {% else %}
+                            <div class="image-placeholder">
+                                <p>无生成图片</p>
+                            </div>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+                
+                {% if task.generated_image_url and task.result_image_path %}
+                <div class="images-container" style="margin-top: 20px;">
+                    <div class="image-box">
+                        <h3>🎨 AI生成原图（抠图前）</h3>
+                        <div class="image-wrapper">
+                            <img src="{{ task.generated_image_url }}" alt="AI生成原图" onerror="this.style.display='none'; this.nextElementSibling.style.display='block';">
+                            <div class="image-placeholder" style="display: none;">
+                                <p>图片加载失败</p>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="image-box">
+                        <h3>📊 处理信息</h3>
+                        <div style="padding: 15px;">
+                            {% if task.bg_removal_attempted %}
+                            <p><strong>背景移除：</strong> 
+                                {% if task.bg_removal_success %}
+                                    <span style="color: green;">✓ 成功</span>
+                                {% else %}
+                                    <span style="color: red;">✗ 失败</span>
+                                {% endif %}
+                            </p>
+                            {% endif %}
+                            {% if task.bg_removal_retry_count > 0 %}
+                            <p><strong>重试次数：</strong> {{ task.bg_removal_retry_count }}</p>
+                            {% endif %}
+                            {% if task.generation_model %}
+                            <p><strong>生成模型：</strong> {{ task.generation_model }}</p>
+                            {% endif %}
+                            {% if task.generation_seed %}
+                            <p><strong>Seed值：</strong> {{ task.generation_seed }}</p>
+                            {% endif %}
+                            {% if task.generation_guidance_scale %}
+                            <p><strong>引导系数：</strong> {{ task.generation_guidance_scale }}</p>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+                {% endif %}
+                
+                <div class="prompt-section">
+                    <h3>📝 提示词信息</h3>
+                    
+                    {% if detection_prompt %}
+                    <div class="prompt-box">
+                        <h4>预检提示词（输入给VLM）</h4>
+                        <div style="background: #fff3cd; border-left: 4px solid #ffc107; padding: 10px; margin-bottom: 10px; border-radius: 5px;">
+                            <p style="color: #856404; font-size: 0.9em; margin: 0;">
+                                <strong>⚠️ 注意：</strong>此处显示的是当前系统配置中的检测提示词。对于历史任务，实际使用的提示词可能与此不同。
+                            </p>
+                        </div>
+                        <details>
+                            <summary style="cursor: pointer; color: #667eea; margin-bottom: 10px;">点击查看完整提示词（当前配置）</summary>
+                            <pre style="white-space: pre-wrap; word-wrap: break-word; font-size: 0.85em; line-height: 1.4; color: #555; background: #f8f9fa; padding: 10px; border-radius: 5px; margin-top: 10px;">{{ detection_prompt }}</pre>
+                        </details>
+                    </div>
+                    {% endif %}
+                    
+                    {% if task.pet_description %}
+                    <div class="prompt-box">
+                        <h4>宠物描述（VLM输出的描述）</h4>
+                        <p>{{ task.pet_description }}</p>
+                    </div>
+                    {% endif %}
+                    
+                    {% if task.actual_prompt %}
+                    <div class="prompt-box">
+                        <h4>实际使用的生图提示词（输入给文生图模型）</h4>
+                        <p>{{ task.actual_prompt }}</p>
+                    </div>
+                    {% endif %}
+                </div>
+                
+                {% elif task.status == 'processing' %}
+                <div class="loading">
+                    <div class="spinner"></div>
+                    <p style="margin-top: 20px;">任务处理中...</p>
+                </div>
+                {% else %}
+                <div class="error-message">
+                    <h3>任务失败</h3>
+                    {% if task.error_message %}
+                    <p><strong>错误信息:</strong> {{ task.error_message }}</p>
+                    {% endif %}
+                    {% if task.error_details %}
+                    <p><strong>详细信息:</strong> {{ task.error_details }}</p>
+                    {% endif %}
+                </div>
+                {% endif %}
+            {% else %}
+            <div class="error-message">
+                <p>没有找到任务数据</p>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+    
+    <script>
+        function navigateTask(direction) {
+            const currentIndex = {{ current_index|default:1 }};
+            let targetIndex;
+            
+            if (direction === 'prev') {
+                targetIndex = currentIndex - 1;
+            } else {
+                targetIndex = currentIndex + 1;
+            }
+            
+            if (targetIndex >= 1 && targetIndex <= {{ total_count|default:1 }}) {
+                window.location.href = `?index=${targetIndex}`;
+            }
+        }
+        
+        // 自动刷新处理中的任务
+        {% if task and task.status == 'processing' %}
+        setTimeout(() => {
+            window.location.reload();
+        }, 3000);
+        {% endif %}
+    </script>
+</body>
+</html>

@@ -1,0 +1,44 @@
+# Authentication配置主文件
+version: "1.0"
+description: "用户认证和配额管理系统配置"
+
+# 配置文件组织
+templates:
+  quotas:
+    - quotas/free_user.yaml
+    - quotas/vip_user.yaml
+    - quotas/max_user.yaml
+  
+  defaults:
+    - defaults/user_profile.yaml
+  
+  limits:
+    - limits/rate_limits.yaml
+
+# 缓存配置
+cache:
+  enabled: true
+  prefix: "user_service"
+  ttl: 300  # 5分钟缓存
+  
+# 配额重置配置
+quota_reset:
+  daily:
+    cron: "0 0 * * *"  # 每天0点
+    timezone: "UTC"
+  monthly:
+    cron: "0 0 1 * *"  # 每月1日0点
+    timezone: "UTC"
+  
+# 功能开关
+features:
+  quota_enforcement: true  # 是否强制执行配额限制
+  auto_reset: true        # 是否自动重置周期性配额
+  cache_enabled: true     # 是否启用缓存
+  audit_logging: true     # 是否记录审计日志
+
+# 默认值配置
+defaults:
+  new_user_template: "free_user"  # 新用户默认配额模板
+  max_cache_size: 1000            # 最大缓存条目数
+  warning_threshold: 0.8          # 配额警告阈值（80%）

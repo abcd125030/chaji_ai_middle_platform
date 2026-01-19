@@ -1,0 +1,299 @@
+# API 文档
+
+本文档描述了企业级AI中台平台的RESTful API接口。所有API均遵循统一的设计规范，提供完整的认证、错误处理和数据格式约定。
+
+## 基础信息
+
+### API 基础地址
+```
+https://api.your-domain.com/api/v1
+```
+
+### 认证方式
+所有API请求都需要在请求头中包含JWT令牌：
+
+```http
+Authorization: Bearer your-jwt-token
+```
+
+### 请求格式
+- Content-Type: `application/json`
+- 字符编码: UTF-8
+- 时间格式: ISO 8601 (`YYYY-MM-DDTHH:mm:ssZ`)
+
+### 响应格式
+所有API响应都遵循统一格式：
+
+```json
+{
+  "status": "success|error",
+  "data": {},
+  "message": "描述信息",
+  "code": 200
+}
+```
+
+## 认证接口
+
+### 用户登录
+```http
+POST /auth/login
+```
+
+**请求参数：**
+```json
+{
+  "username": "用户名",
+  "password": "密码"
+}
+```
+
+**响应示例：**
+```json
+{
+  "status": "success",
+  "data": {
+    "access_token": "jwt-token",
+    "refresh_token": "refresh-token",
+    "user": {
+      "id": "123",
+      "username": "testuser",
+      "email": "test@example.com"
+    }
+  },
+  "message": "登录成功",
+  "code": 200
+}
+```
+
+### 刷新令牌
+```http
+POST /auth/refresh
+```
+
+**请求参数：**
+```json
+{
+  "refresh_token": "your-refresh-token"
+}
+```
+
+## 聊天会话接口
+
+### 创建会话
+```http
+POST /chat/sessions
+```
+
+**请求参数：**
+```json
+{
+  "title": "会话标题",
+  "system_prompt": "系统提示词（可选）"
+}
+```
+
+### 发送消息
+```http
+POST /chat/sessions/{session_id}/messages
+```
+
+**请求参数：**
+```json
+{
+  "content": "用户消息内容",
+  "files": [
+    {
+      "name": "document.pdf",
+      "content": "base64编码的文件内容"
+    }
+  ]
+}
+```
+
+### SSE 流式响应
+```http
+GET /chat/sessions/{session_id}/stream
+```
+
+**响应格式：**
+```
+data: {"type": "plan", "content": "我将帮您分析这份文档..."}
+
+data: {"type": "tool_output", "content": "正在处理PDF文件..."}
+
+data: {"type": "final_answer", "content": "分析完成，结果如下：..."}
+```
+
+## 知识库接口
+
+### 创建知识库集合
+```http
+POST /knowledge/collections
+```
+
+**请求参数：**
+```json
+{
+  "name": "集合名称",
+  "description": "集合描述",
+  "embedding_model": "text-embedding-ada-002"
+}
+```
+
+### 上传文档
+```http
+POST /knowledge/collections/{collection_id}/documents
+```
+
+**请求参数：**
+```json
+{
+  "title": "文档标题",
+  "content": "文档内容",
+  "metadata": {
+    "source": "upload",
+    "category": "技术文档"
+  }
+}
+```
+
+### 语义检索
+```http
+POST /knowledge/collections/{collection_id}/search
+```
+
+**请求参数：**
+```json
+{
+  "query": "检索查询语句",
+  "top_k": 5,
+  "threshold": 0.7
+}
+```
+
+## 文件处理接口
+
+### 文件上传
+```http
+POST /files/upload
+```
+
+**请求格式：** `multipart/form-data`
+
+**支持的文件类型：**
+- 文档：`docx`, `pdf`, `txt`
+- 表格：`xlsx`, `csv` 
+- 图片：`png`, `jpg`, `jpeg`
+
+**响应示例：**
+```json
+{
+  "status": "success",
+  "data": {
+    "file_id": "file-uuid",
+    "filename": "document.pdf",
+    "size": 1024000,
+    "processed_content": "提取的文本内容..."
+  }
+}
+```
+
+### 文件预处理
+```http
+GET /files/{file_id}/process
+```
+
+**响应示例：**
+```json
+{
+  "status": "success", 
+  "data": {
+    "file_id": "file-uuid",
+    "status": "completed",
+    "extracted_text": "文档的文本内容",
+    "structured_data": {
+      "tables": [...],
+      "images": [...]
+    }
+  }
+}
+```
+
+## 工具系统接口
+
+### 获取可用工具
+```http
+GET /tools/available
+```
+
+### 执行工具
+```http
+POST /tools/{tool_name}/execute
+```
+
+**请求参数：**
+```json
+{
+  "parameters": {
+    "param1": "value1",
+    "param2": "value2"
+  }
+}
+```
+
+## 错误代码
+
+| 错误代码 | 描述 | 解决方案 |
+|---------|------|----------|
+| 400 | 请求参数错误 | 检查请求参数格式和必填字段 |
+| 401 | 认证失败 | 检查JWT令牌是否有效 |
+| 403 | 权限不足 | 联系管理员分配相应权限 |
+| 404 | 资源不存在 | 确认资源ID是否正确 |
+| 429 | 请求频率超限 | 降低请求频率或联系客服提升限额 |
+| 500 | 服务器内部错误 | 联系技术支持 |
+
+## 速率限制
+
+- 普通用户：100 请求/分钟
+- 高级用户：1000 请求/分钟
+- 企业用户：无限制
+
+## SDK 和示例代码
+
+### Python SDK
+```python
+from ai_platform import Client
+
+client = Client(api_key="your-api-key")
+
+# 创建会话
+session = client.chat.create_session(title="测试会话")
+
+# 发送消息
+response = client.chat.send_message(
+    session_id=session.id,
+    content="你好，请帮我分析这份数据"
+)
+```
+
+### JavaScript SDK
+```javascript
+import { AIClient } from '@ai-platform/client';
+
+const client = new AIClient({ apiKey: 'your-api-key' });
+
+// 创建会话
+const session = await client.chat.createSession({
+  title: '测试会话'
+});
+
+// 发送消息
+const response = await client.chat.sendMessage(session.id, {
+  content: '你好，请帮我分析这份数据'
+});
+```
+
+---
+
+*需要更多帮助？查看我们的[故障排除指南](/docs/troubleshooting)或联系技术支持。*

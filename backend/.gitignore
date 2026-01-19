@@ -1,0 +1,5 @@
+authentication_backup*/
+*.sql
+
+# Qdrant向量数据库本地存储
+qdrant_storage/

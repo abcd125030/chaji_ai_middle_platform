@@ -1,0 +1,36 @@
+(
+echo "=============== [ CPU Info ] ===============";
+echo "核心/线程数决定了Nginx/Apache等Web服务器的最佳worker_processes数量";
+lscpu;
+echo;
+echo "============= [ Memory Info ] =============";
+echo "'available'内存是应用实际可用的，避免使用swap是关键";
+free -h;
+echo;
+echo "------- [ Virtual Memory Stats ] -------";
+echo "关注si/so(swap in/out)列，持续非零表示内存不足";
+vmstat 1 2 | tail -n 1;
+echo;
+echo "============== [ Disk Info & I/O ] ==============";
+echo "高'await'和'%util'值是数据库或日志写入的瓶颈信号";
+lsblk;
+echo;
+iostat -dx;
+echo;
+echo "============ [ Network Interfaces ] ============";
+echo "检查网卡IP和状态。使用'ethtool <接口名>'查看网卡速率";
+ip a;
+echo;
+echo "======= [ System Limits - Open Files ] =======";
+echo "高并发连接会消耗大量文件描述符，此限制通常需要调高";
+echo -n "当前用户打开文件数软限制: "; ulimit -Sn;
+echo -n "当前用户打开文件数硬限制: "; ulimit -Hn;
+echo;
+echo "=========== [ System Load & Uptime ] ===========";
+echo "Load average值应理想地低于您的逻辑CPU核心数";
+uptime;
+echo;
+echo "======== [ Hardware Summary (Sudo) ] ========";
+echo "服务器整体硬件配置概览";
+sudo lshw -short;
+)

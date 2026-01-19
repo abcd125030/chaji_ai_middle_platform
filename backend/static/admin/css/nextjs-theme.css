@@ -1,0 +1,844 @@
+/* AI中台管理系统 - 基于前端设计指南的统一风格 */
+/* 遵循 FRONTEND_STYLE_GUIDE.md 的设计原则 */
+
+/* CSS变量定义 - 与前端保持一致 */
+:root {
+    /* 基础色板 - 背景色系 */
+    --color-background: #000000;        /* 主背景色 */
+    --color-background-secondary: #0A0A0A;  /* 次级背景色 */
+    --color-background-hover: #1A1A1A;      /* 高亮背景色 */
+
+    /* 文本色系 */
+    --color-text-primary: #FFFFFF;      /* 主文本色 */
+    --color-text-secondary: #ADADAD;    /* 次级文本色 */
+    --color-text-muted: #888888;        /* 辅助文本色 */
+
+    /* 交互色系 */
+    --color-button-primary: #EDEDED;    /* 主按钮背景 */
+    --color-button-text: #0A0A0A;       /* 主按钮文本 */
+    --color-border-primary: #EDEDED;    /* 主边框 */
+    --color-border-secondary: #1A1A1A;  /* 次级边框 */
+
+    /* 间距系统 */
+    --spacing-xs: 4px;   /* 0.25rem */
+    --spacing-sm: 8px;   /* 0.5rem */
+    --spacing-md: 16px;  /* 1rem */
+    --spacing-lg: 24px;  /* 1.5rem */
+    --spacing-xl: 32px;  /* 2rem */
+    --spacing-2xl: 48px; /* 3rem */
+
+    /* 圆角 - 统一使用 */
+    --radius-sm: 6px;
+    --radius-md: 8px;
+    --radius-lg: 12px;
+
+    /* 过渡效果 */
+    --transition-fast: 150ms ease;
+    --transition-standard: 200ms ease;
+    --transition-slow: 300ms ease;
+}
+
+/* 全局样式重置 */
+* {
+    transition: all var(--transition-standard) !important;
+}
+
+/* 核心背景和文本颜色 - 使用CSS变量 */
+body,
+.wrapper,
+.content-wrapper,
+.main-header,
+.main-sidebar,
+.sidebar,
+.navbar,
+.content,
+.modal-content,
+.modal-header,
+.modal-body,
+.modal-footer,
+.dropdown-menu,
+.table,
+.form-control,
+.custom-select,
+.input-group-text,
+.breadcrumb,
+.nav-tabs,
+.pagination .page-link,
+.alert,
+.module,
+#changelist,
+#changelist .results {
+    background-color: var(--color-background) !important;
+    background: var(--color-background) !important;
+    color: var(--color-text-primary) !important;
+    border: none !important;
+}
+
+/* 卡片和信息框需要对比度 */
+.card,
+.card-body,
+.card-header,
+.card-footer,
+.info-box,
+.small-box {
+    color: #EDEDED !important;
+    border: none !important;
+}
+
+/* 统一阴影和圆角处理 */
+* {
+    box-shadow: none !important;
+}
+
+/* 默认圆角设置 */
+.card, .btn, .form-control, .modal-content {
+    border-radius: var(--radius-md) !important;
+}
+
+.badge {
+    border-radius: var(--radius-sm) !important;
+}
+
+/* 次要背景元素 */
+.card-header,
+.modal-header,
+.modal-footer,
+thead,
+.table-striped tbody tr:nth-of-type(odd),
+.nav-sidebar .nav-item > .nav-link:hover,
+.nav-sidebar .nav-item > .nav-link.active,
+.table-hover tbody tr:hover,
+.form-control:focus,
+.custom-select:focus,
+.pagination .page-link:hover,
+.dropdown-item:hover,
+.info-box-icon,
+.module h2 {
+    background-color: #0A0A0A !important;
+    background: #0A0A0A !important;
+}
+
+/* 文本颜色统一 */
+body,
+.content-wrapper,
+.card,
+.card-body,
+.table,
+.form-control,
+.custom-select,
+.modal-body,
+.dropdown-item,
+a,
+a:hover,
+.page-link,
+.breadcrumb-item,
+h1, h2, h3, h4, h5, h6,
+p, span, div, li, td, th,
+label, .control-label,
+.help-block,
+.form-text {
+    color: #EDEDED !important;
+}
+
+/* 次要文本 */
+.text-muted,
+.breadcrumb-item::before,
+small,
+.small {
+    color: #888888 !important;
+}
+
+/* 极简边框 - 只在必要的地方使用 */
+.table-bordered,
+.table-bordered td,
+.table-bordered th,
+.card,
+.form-control,
+.custom-select,
+.input-group-text,
+.pagination .page-link,
+.nav-tabs,
+.modal-content {
+    border: 1px solid #2A2A2A !important;
+}
+
+/* 导航栏 - 极简设计 */
+.main-header {
+    border-bottom: 1px solid #2A2A2A !important;
+    height: 60px !important;
+}
+
+.navbar {
+    min-height: 60px !important;
+    padding: 0 20px !important;
+}
+
+.navbar-nav .nav-link {
+    padding: 20px 15px !important;
+    font-size: 14px !important;
+    font-weight: 400 !important;
+    letter-spacing: 0.5px !important;
+    background: transparent !important;
+    color: #EDEDED !important;
+}
+
+.navbar-nav .nav-link:hover {
+    background: #0A0A0A !important;
+    color: #FFFFFF !important;
+}
+
+.navbar-nav .nav-link.active,
+.navbar-nav .nav-item.active .nav-link {
+    background: #0A0A0A !important;
+    color: #FFFFFF !important;
+    border-bottom: 2px solid #EDEDED !important;
+}
+
+/* 侧边栏 - 极简设计 */
+.main-sidebar {
+    background: #000000 !important;
+    border-right: 1px solid #2A2A2A !important;
+    width: 250px !important;
+}
+
+.sidebar {
+    padding: 0 !important;
+}
+
+.nav-sidebar > .nav-item {
+    border-bottom: 1px solid #1A1A1A !important;
+}
+
+.nav-sidebar .nav-link {
+    padding: 15px 20px !important;
+    font-size: 13px !important;
+    font-weight: 400 !important;
+    letter-spacing: 0.3px !important;
+}
+
+.nav-sidebar .nav-link:hover {
+    background: #0A0A0A !important;
+    border-left: 2px solid #EDEDED !important;
+}
+
+.nav-sidebar .nav-link.active {
+    background: #0A0A0A !important;
+    border-left: 2px solid #FFFFFF !important;
+}
+
+/* 按钮 - 遵循设计指南 */
+.btn {
+    font-size: 14px !important;
+    padding: 12px 24px !important;
+    border-radius: var(--radius-md) !important;
+    font-weight: 500 !important;
+    letter-spacing: 0.3px !important;
+    text-transform: none !important;
+    border-width: 2px !important;
+    min-height: 44px !important;
+    line-height: 20px !important;
+    display: inline-flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    margin-right: var(--spacing-sm) !important;
+    margin-bottom: var(--spacing-sm) !important;
+    transition: all var(--transition-standard) !important;
+}
+
+/* 最后一个按钮不需要右边距 */
+.btn:last-child {
+    margin-right: 0 !important;
+}
+
+/* 按钮组特殊处理 - 保持间隔 */
+.btn-group .btn {
+    margin-right: 8px !important;
+}
+
+.btn-group .btn:last-child {
+    margin-right: 0 !important;
+}
+
+/* 主按钮 - 遵循设计指南 */
+.btn-primary,
+.btn-success,
+a.addlink,
+.submit-row input[type="submit"][name="_save"],
+.submit-row input[type="submit"]:not([name="_continue"]):not([name="_addanother"]) {
+    background: var(--color-button-primary) !important;
+    color: var(--color-button-text) !important;
+    border: 2px solid var(--color-button-text) !important;
+}
+
+.btn-primary:hover,
+.btn-success:hover,
+a.addlink:hover,
+.submit-row input[type="submit"][name="_save"]:hover,
+.submit-row input[type="submit"]:not([name="_continue"]):not([name="_addanother"]):hover {
+    background: var(--color-text-primary) !important;
+    color: var(--color-background) !important;
+    border-color: var(--color-background) !important;
+    transform: translateY(-1px) !important;
+}
+
+/* 次要按钮 - 遵循设计指南 */
+.btn-secondary,
+.btn-default,
+.btn-outline-secondary {
+    background: var(--color-background-secondary) !important;
+    color: var(--color-button-primary) !important;
+    border: 1px solid var(--color-button-primary) !important;
+}
+
+.btn-secondary:hover,
+.btn-default:hover,
+.btn-outline-secondary:hover {
+    background: var(--color-background-hover) !important;
+    color: var(--color-text-primary) !important;
+    border-color: var(--color-text-primary) !important;
+    transform: translateY(-1px) !important;
+}
+
+/* 所有按钮变体统一样式 */
+.btn-info,
+.btn-warning,
+.btn-danger,
+.btn-xs,
+.btn-sm,
+.btn-lg,
+.changelink,
+.btn-navbar {
+    background: transparent !important;
+    color: #EDEDED !important;
+    border: 1px solid #888888 !important;
+}
+
+.btn-info:hover,
+.btn-warning:hover,
+.btn-danger:hover,
+.btn-xs:hover,
+.btn-sm:hover,
+.btn-lg:hover,
+.changelink:hover,
+.btn-navbar:hover {
+    background: #0A0A0A !important;
+    color: #FFFFFF !important;
+    border-color: #EDEDED !important;
+}
+
+/* 危险操作按钮特殊处理 */
+.btn-danger {
+    color: #EF4444 !important;
+    border-color: #EF4444 !important;
+}
+
+.btn-danger:hover {
+    background: #EF4444 !important;
+    color: #FFFFFF !important;
+    border-color: #EF4444 !important;
+}
+
+/* 输入框组件 - 遵循设计指南 */
+.form-control,
+.custom-select,
+input[type="text"],
+input[type="search"],
+input[type="email"],
+input[type="password"],
+input[type="number"],
+input[type="tel"],
+input[type="url"],
+input[type="date"],
+input[type="datetime-local"],
+input[type="month"],
+input[type="week"],
+input[type="time"],
+select,
+textarea {
+    background: var(--color-background-secondary) !important;
+    border: 1px solid var(--color-border-secondary) !important;
+    color: var(--color-text-primary) !important;
+    font-size: 16px !important;
+    padding: 10px 16px !important;
+    min-height: 44px !important;
+    line-height: 24px !important;
+    border-radius: var(--radius-sm) !important;
+    transition: border-color var(--transition-standard) !important;
+}
+
+.form-control:focus,
+.custom-select:focus {
+    background: #0A0A0A !important;
+    border-color: #EDEDED !important;
+    box-shadow: none !important;
+}
+
+/* 表格 - 极简设计 */
+.table {
+    margin: 0 !important;
+    font-size: 13px !important;
+}
+
+.table thead th {
+    background: #0A0A0A !important;
+    color: #888888 !important;
+    font-weight: 500 !important;
+    text-transform: uppercase !important;
+    font-size: 11px !important;
+    letter-spacing: 0.5px !important;
+    padding: 15px !important;
+    border: none !important;
+    border-bottom: 1px solid #2A2A2A !important;
+}
+
+.table tbody td {
+    padding: 12px 15px !important;
+    border: none !important;
+    border-bottom: 1px solid #1A1A1A !important;
+}
+
+.table-hover tbody tr:hover {
+    background: #0A0A0A !important;
+}
+
+/* 卡片组件 - 遵循设计指南 */
+.card {
+    background: var(--color-background-secondary) !important;
+    border: 1px solid var(--color-border-secondary) !important;
+    border-radius: var(--radius-lg) !important;
+    margin-bottom: var(--spacing-lg) !important;
+    transition: border-color var(--transition-standard) !important;
+}
+
+.card:hover {
+    border-color: var(--color-text-muted) !important;
+}
+
+.card-header {
+    background: var(--color-background-hover) !important;
+    border-bottom: 1px solid var(--color-border-secondary) !important;
+    padding: var(--spacing-lg) !important;
+    font-size: 16px !important;
+    font-weight: 500 !important;
+    letter-spacing: 0.3px !important;
+    border-radius: var(--radius-lg) var(--radius-lg) 0 0 !important;
+}
+
+.card-body {
+    background: var(--color-background-secondary) !important;
+    padding: var(--spacing-lg) !important;
+}
+
+/* 标题渐变效果 - 遵循设计指南 */
+.content-header h1,
+h1.h3,
+.dashboard-title {
+    background: linear-gradient(180deg, #FFFFFF 0%, #ADADAD 100%) !important;
+    -webkit-background-clip: text !important;
+    -webkit-text-fill-color: transparent !important;
+    background-clip: text !important;
+    font-weight: 700 !important;
+    font-size: 48px !important;  /* 大标题尺寸 */
+    letter-spacing: -1px !important;
+    margin: 0 !important;
+    padding: var(--spacing-2xl) 0 var(--spacing-lg) 0 !important;
+    line-height: 1.2 !important;
+}
+
+h2 {
+    font-size: 32px !important;  /* 中标题 */
+    font-weight: 600 !important;
+    color: var(--color-text-primary) !important;
+    margin-bottom: var(--spacing-md) !important;
+}
+
+h3 {
+    font-size: 24px !important;  /* 小标题 */
+    font-weight: 500 !important;
+    color: var(--color-text-primary) !important;
+    margin-bottom: var(--spacing-sm) !important;
+}
+
+/* 面包屑 - 极简 */
+.breadcrumb {
+    background: transparent !important;
+    padding: 0 !important;
+    margin: 10px 0 20px 0 !important;
+}
+
+.breadcrumb-item {
+    font-size: 12px !important;
+    color: #888888 !important;
+}
+
+.breadcrumb-item.active {
+    color: #EDEDED !important;
+}
+
+/* 标签 */
+.badge {
+    background: #0A0A0A !important;
+    color: #EDEDED !important;
+    border: 1px solid #2A2A2A !important;
+    padding: 4px 8px !important;
+    font-size: 11px !important;
+    font-weight: 500 !important;
+}
+
+.badge-success,
+.btn-success.badge {
+    background: #10B981 !important;
+    border-color: #10B981 !important;
+    color: #FFFFFF !important;
+}
+
+.badge-danger {
+    background: #EF4444 !important;
+    border-color: #EF4444 !important;
+    color: #FFFFFF !important;
+}
+
+/* 分页 */
+.pagination {
+    margin: 20px 0 !important;
+}
+
+.page-link {
+    background: #000000 !important;
+    border: 1px solid #2A2A2A !important;
+    color: #EDEDED !important;
+    padding: 8px 12px !important;
+    font-size: 13px !important;
+    margin: 0 2px !important;
+}
+
+.page-link:hover {
+    background: #0A0A0A !important;
+    border-color: #EDEDED !important;
+    color: #FFFFFF !important;
+}
+
+.page-item.active .page-link {
+    background: #EDEDED !important;
+    border-color: #EDEDED !important;
+    color: #0A0A0A !important;
+}
+
+/* 链接 */
+a {
+    color: #EDEDED !important;
+    text-decoration: none !important;
+}
+
+a:hover {
+    color: #FFFFFF !important;
+    text-decoration: none !important;
+}
+
+/* 移除Logo区域的背景 */
+.brand-link {
+    background: #000000 !important;
+    border-bottom: 1px solid #2A2A2A !important;
+    padding: 15px !important;
+    height: 60px !important;
+}
+
+/* 全局字体大小调整 */
+.content {
+    font-size: 14px !important;
+    padding: 20px !important;
+}
+
+/* 滚动条 */
+::-webkit-scrollbar {
+    width: 10px !important;
+    height: 10px !important;
+}
+
+::-webkit-scrollbar-track {
+    background: #000000 !important;
+}
+
+::-webkit-scrollbar-thumb {
+    background: #2A2A2A !important;
+}
+
+::-webkit-scrollbar-thumb:hover {
+    background: #888888 !important;
+}
+
+/* 选择框和下拉列表优化 */
+select,
+select.form-control,
+.custom-select {
+    background: #000000 !important;
+    color: #EDEDED !important;
+}
+
+select option,
+select.form-control option,
+.custom-select option {
+    background: #0A0A0A !important;
+    color: #EDEDED !important;
+    padding: 8px !important;
+}
+
+select option:hover,
+select.form-control option:hover,
+.custom-select option:hover,
+select option:checked,
+select.form-control option:checked,
+.custom-select option:checked {
+    background: #1A1A1A !important;
+    color: #FFFFFF !important;
+}
+
+/* 下拉菜单容器 */
+.dropdown-menu {
+    background: #0A0A0A !important;
+    border: 1px solid #2A2A2A !important;
+    padding: 0 !important;
+}
+
+.dropdown-item {
+    background: transparent !important;
+    color: #EDEDED !important;
+    padding: 10px 20px !important;
+    font-size: 13px !important;
+    border-bottom: 1px solid #1A1A1A !important;
+}
+
+.dropdown-item:last-child {
+    border-bottom: none !important;
+}
+
+.dropdown-item:hover,
+.dropdown-item:focus {
+    background: #1A1A1A !important;
+    color: #FFFFFF !important;
+}
+
+.dropdown-item.active,
+.dropdown-item:active {
+    background: #2A2A2A !important;
+    color: #FFFFFF !important;
+}
+
+/* Select2 下拉组件样式 */
+.select2-container--default .select2-selection--single,
+.select2-container--default .select2-selection--multiple {
+    background: #000000 !important;
+    border: 1px solid #2A2A2A !important;
+    color: #EDEDED !important;
+}
+
+.select2-dropdown {
+    background: #0A0A0A !important;
+    border: 1px solid #2A2A2A !important;
+}
+
+.select2-container--default .select2-results__option {
+    background: #0A0A0A !important;
+    color: #EDEDED !important;
+}
+
+.select2-container--default .select2-results__option--highlighted[aria-selected] {
+    background: #1A1A1A !important;
+    color: #FFFFFF !important;
+}
+
+.select2-container--default .select2-results__option[aria-selected="true"] {
+    background: #2A2A2A !important;
+    color: #FFFFFF !important;
+}
+
+/* 移除所有不必要的装饰 */
+.elevation-1,
+.elevation-2,
+.elevation-3,
+.elevation-4,
+.elevation-5 {
+    box-shadow: none !important;
+}
+
+/* 代码块 */
+pre, code {
+    background: #0A0A0A !important;
+    color: #EDEDED !important;
+    border: 1px solid #2A2A2A !important;
+    padding: 10px !important;
+    font-size: 12px !important;
+    font-family: 'SF Mono', Monaco, 'Courier New', monospace !important;
+}
+
+/* 输入框placeholder */
+::placeholder {
+    color: #888888 !important;
+    opacity: 1 !important;
+}
+
+/* 禁用状态 */
+.btn:disabled,
+.form-control:disabled,
+.custom-select:disabled {
+    opacity: 0.5 !important;
+    cursor: not-allowed !important;
+}
+
+/* 成功/错误消息 */
+.alert {
+    border: 1px solid #2A2A2A !important;
+    background: #0A0A0A !important;
+    color: #EDEDED !important;
+    font-size: 13px !important;
+}
+
+.alert-success {
+    border-color: #10B981 !important;
+}
+
+.alert-danger {
+    border-color: #EF4444 !important;
+}
+
+/* 图标颜色 */
+.fas, .far, .fab, .fa {
+    color: #888888 !important;
+}
+
+.nav-link.active .fas,
+.nav-link.active .far,
+.nav-link.active .fab {
+    color: #EDEDED !important;
+}
+
+/* 背景色类覆盖 */
+.bg-gray,
+.bg-gray-dark,
+.bg-info,
+.bg-primary,
+.bg-secondary,
+.bg-success,
+.bg-warning {
+    background-color: #0A0A0A !important;
+    background: #0A0A0A !important;
+}
+
+/* 文本颜色类覆盖 */
+.text-gray,
+.text-muted,
+.text-secondary {
+    color: #888888 !important;
+}
+
+.text-white,
+.text-light {
+    color: #EDEDED !important;
+}
+
+/* Timeline 组件样式覆盖 */
+.timeline-header {
+    background: #0A0A0A !important;
+    color: #EDEDED !important;
+    border: none !important;
+}
+
+.timeline-header.no-border {
+    background: #0A0A0A !important;
+    color: #EDEDED !important;
+    border: none !important;
+}
+
+.timeline-item {
+    background: #000000 !important;
+}
+
+.timeline-body {
+    background: #000000 !important;
+    color: #EDEDED !important;
+}
+
+/* 搜索表单特殊处理 */
+.navbar-search {
+    display: flex !important;
+    align-items: center !important;
+    gap: 8px !important;
+}
+
+.navbar-search input[type="search"],
+.navbar-search .form-control-navbar {
+    height: 36px !important;
+    padding: 8px 12px !important;
+    font-size: 13px !important;
+    background: #0A0A0A !important;
+    border: 1px solid #2A2A2A !important;
+    color: #EDEDED !important;
+}
+
+.navbar-search button,
+.navbar-search .btn {
+    height: 36px !important;
+    padding: 8px 16px !important;
+}
+
+/* 顶部搜索栏对齐 */
+.navbar-nav .form-inline {
+    display: flex !important;
+    align-items: center !important;
+}
+
+.navbar-nav .form-inline input {
+    height: 36px !important;
+}
+
+.navbar-nav .form-inline .btn {
+    height: 36px !important;
+    margin-left: 8px !important;
+}
+
+/* textarea 特殊处理 */
+textarea {
+    height: auto !important;
+    min-height: 80px !important;
+    resize: vertical !important;
+}
+
+/* 强制覆盖导航标签样式 */
+.nav-tabs,
+ul.nav.nav-tabs {
+    background: #000000 !important;
+    border-bottom: 1px solid #2A2A2A !important;
+}
+
+.nav-tabs > li > a,
+.nav-tabs .nav-link,
+.nav.nav-tabs > li > a,
+ul.nav-tabs > li > a {
+    background: transparent !important;
+    color: #888888 !important;
+    border: none !important;
+    margin: 0 !important;
+    padding: 12px 20px !important;
+}
+
+.nav-tabs > li > a:hover,
+.nav-tabs .nav-link:hover,
+.nav.nav-tabs > li > a:hover,
+ul.nav-tabs > li > a:hover {
+    background: #0A0A0A !important;
+    color: #EDEDED !important;
+    border: none !important;
+}
+
+.nav-tabs > li.active > a,
+.nav-tabs > li.active > a:hover,
+.nav-tabs > li.active > a:focus,
+.nav-tabs .nav-link.active,
+.nav-tabs .nav-item.active .nav-link,
+.nav.nav-tabs > li.active > a,
+ul.nav-tabs > li.active > a {
+    background: #0A0A0A !important;
+    color: #FFFFFF !important;
+    border: none !important;
+    border-bottom: 2px solid #EDEDED !important;
+}

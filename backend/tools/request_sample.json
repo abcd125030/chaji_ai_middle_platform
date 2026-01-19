@@ -1,0 +1,16 @@
+{
+	"messages": [
+		{
+			"role": "user",
+			"content": "用户意图是：**用户主要意图：**\n通过深入分析销售数据，获取清晰可操作的洞察和建议，以提升销售业绩并优化管理决策。\n\n**最终报告核心要求：**\n一份面向销售及管理层的综合性销售数据分析报告，需整合多源数据，进行多维度关键指标（如销售额、利润）的深入剖析。报告需具备清晰的可视化效果，重点呈现可行动的发现、趋势预测及风险识别，以直接支持业绩提升和决策优化。\n请根据此意图，生成一个详细的、有序的执行计划。计划应由一系列工具调用组成，每个工具调用是一个JSON对象，包含 'tool' (工具名称) 和 'args' (工具参数)。\n可用的工具及其描述如下：\n\n        - document_parser: 将docx文件转换为markdown。参数: {\"file_path\": \"path/to/file.docx\"}\n        - excel_processor: 将excel文件转换为pandas DataFrame并序列化。参数: {\"file_path\": \"path/to/file.xlsx\"}\n        - table_analyzer: 分析表格数据结构。参数: {\"table_json\": \"...\"}\n        - calculate_data: 根据需求计算表格数据。参数: {\"table_json\": \"...\", \"calculation_rules\": \"...\"}\n        - file_processing: 通用文件读写。参数: {\"file_path\": \"...\", \"operation\": \"read/write\", \"content\": \"...\"}\n        - report_generator: 根据模板和数据生成最终报告。参数: {\"template_name\": \"...\", \"data\": \"...\"}\n        \n请直接输出JSON数组，不要包含任何额外文本或解释。"
+		}
+	],
+	"temperature": 0.2,
+	"max_tokens": 2000,
+	"response_format": {
+		"type": "json_object"
+	},
+	"stream": false,
+	"target_service": "gemini",
+	"model": "gemini-2.5-flash-preview-05-20"
+}

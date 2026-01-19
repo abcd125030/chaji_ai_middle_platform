@@ -1,0 +1,335 @@
+{% extends "admin/base_site.html" %}
+{% load i18n static %}
+
+{% block title %}系统仪表板 | {{ site_title|default:_('Django site admin') }}{% endblock %}
+
+{% block extrastyle %}
+{{ block.super }}
+<style>
+    .dashboard-wrapper {
+        padding: 20px;
+    }
+    .stats-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+        gap: 20px;
+        margin-bottom: 30px;
+    }
+    .stat-card {
+        background: #fff;
+        border-radius: 8px;
+        padding: 20px;
+        box-shadow: 0 0 10px rgba(0,0,0,0.1);
+        border-left: 4px solid;
+        transition: transform 0.2s;
+    }
+    .stat-card:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 4px 20px rgba(0,0,0,0.1);
+    }
+    .stat-card.primary { border-left-color: #007bff; }
+    .stat-card.success { border-left-color: #28a745; }
+    .stat-card.warning { border-left-color: #ffc107; }
+    .stat-card.danger { border-left-color: #dc3545; }
+    .stat-card.info { border-left-color: #17a2b8; }
+    .stat-card h4 {
+        margin: 0 0 15px 0;
+        color: #495057;
+        font-size: 14px;
+        font-weight: 600;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+    }
+    .stat-value {
+        font-size: 32px;
+        font-weight: bold;
+        color: #212529;
+        margin: 10px 0;
+        line-height: 1;
+    }
+    .stat-detail {
+        font-size: 13px;
+        color: #6c757d;
+        margin-top: 10px;
+    }
+    .stat-detail span {
+        display: inline-block;
+        margin-right: 15px;
+    }
+    .chart-card {
+        background: #fff;
+        border-radius: 8px;
+        padding: 20px;
+        margin-bottom: 20px;
+        box-shadow: 0 0 10px rgba(0,0,0,0.1);
+    }
+    .chart-card h3 {
+        margin: 0 0 20px 0;
+        color: #212529;
+        font-size: 18px;
+    }
+    .quick-actions {
+        margin-bottom: 30px;
+    }
+    .quick-actions .btn {
+        margin-right: 10px;
+        margin-bottom: 10px;
+    }
+</style>
+{% endblock %}
+
+
+{% block breadcrumbs %}
+<div class="breadcrumbs">
+    <a href="{% url 'admin:index' %}">{% trans 'Home' %}</a>
+    &rsaquo; 系统仪表板
+</div>
+{% endblock %}
+
+{% block content %}
+<div class="dashboard-wrapper">
+    <h1>系统仪表板</h1>
+
+    <!-- 快速操作 -->
+    <div class="quick-actions">
+        <h3>快速操作</h3>
+        <a href="{% url 'admin:agentic_graph_graphdefinition_add' %}" class="btn btn-primary">
+            <i class="fas fa-plus"></i> 创建Graph定义
+        </a>
+        <a href="{% url 'admin:agentic_graph_taskexecution_changelist' %}" class="btn btn-info">
+            <i class="fas fa-list"></i> 查看任务执行
+        </a>
+        <a href="{% url 'admin:knowledge_knowledgecollection_changelist' %}" class="btn btn-success">
+            <i class="fas fa-book"></i> 管理知识库
+        </a>
+        <a href="{% url 'admin:llm_llmmodel_changelist' %}" class="btn btn-warning">
+            <i class="fas fa-robot"></i> 配置LLM模型
+        </a>
+    </div>
+
+    <!-- 统计卡片 -->
+    <div class="stats-grid">
+        <div class="stat-card primary">
+            <h4><i class="fas fa-project-diagram"></i> Agentic工作流</h4>
+            <div class="stat-value" id="agentic-count">--</div>
+            <div class="stat-detail">
+                <span>运行中: <strong id="agentic-running">--</strong></span>
+                <span>成功率: <strong id="agentic-success">--%</strong></span>
+            </div>
+        </div>
+
+        <div class="stat-card info">
+            <h4><i class="fas fa-sitemap"></i> Graph引擎</h4>
+            <div class="stat-value" id="graph-count">--</div>
+            <div class="stat-detail">
+                <span>活跃图: <strong id="graph-active">--</strong></span>
+                <span>今日执行: <strong id="graph-today">--</strong></span>
+            </div>
+        </div>
+
+        <div class="stat-card success">
+            <h4><i class="fas fa-database"></i> 知识库</h4>
+            <div class="stat-value" id="knowledge-count">--</div>
+            <div class="stat-detail">
+                <span>文档数: <strong id="knowledge-docs">--</strong></span>
+                <span>向量数: <strong id="knowledge-vectors">--</strong></span>
+            </div>
+        </div>
+
+        <div class="stat-card warning">
+            <h4><i class="fas fa-brain"></i> LLM调用</h4>
+            <div class="stat-value" id="llm-count">--</div>
+            <div class="stat-detail">
+                <span>Token: <strong id="llm-tokens">--</strong></span>
+                <span>成本: <strong id="llm-cost">--</strong></span>
+            </div>
+        </div>
+
+        <div class="stat-card danger">
+            <h4><i class="fas fa-users"></i> 用户统计</h4>
+            <div class="stat-value" id="user-count">--</div>
+            <div class="stat-detail">
+                <span>活跃: <strong id="user-active">--</strong></span>
+                <span>今日新增: <strong id="user-new">--</strong></span>
+            </div>
+        </div>
+    </div>
+
+    <!-- 图表区域 -->
+    <div class="row">
+        <div class="col-md-6">
+            <div class="chart-card">
+                <h3>任务执行趋势（最近7天）</h3>
+                <canvas id="executionTrend" height="150"></canvas>
+            </div>
+        </div>
+        <div class="col-md-6">
+            <div class="chart-card">
+                <h3>系统负载</h3>
+                <canvas id="systemLoad" height="150"></canvas>
+            </div>
+        </div>
+    </div>
+
+    <!-- 最近活动 -->
+    <div class="chart-card">
+        <h3>最近活动</h3>
+        <div class="table-responsive">
+            <table class="table table-striped">
+                <thead>
+                    <tr>
+                        <th>时间</th>
+                        <th>类型</th>
+                        <th>描述</th>
+                        <th>状态</th>
+                        <th>操作</th>
+                    </tr>
+                </thead>
+                <tbody id="activity-log">
+                    <tr>
+                        <td colspan="5" class="text-center">
+                            <i class="fas fa-spinner fa-spin"></i> 加载中...
+                        </td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/chart.js@3.9.1/dist/chart.min.js"></script>
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // 加载统计数据
+    loadStatistics();
+
+    // 绘制图表
+    drawExecutionTrend();
+    drawSystemLoad();
+
+    // 加载活动日志
+    loadActivityLog();
+});
+
+function loadStatistics() {
+    // 这里应该通过AJAX从后端获取实际数据
+    // 现在使用模拟数据
+    document.getElementById('agentic-count').textContent = '156';
+    document.getElementById('agentic-running').textContent = '12';
+    document.getElementById('agentic-success').textContent = '85%';
+
+    document.getElementById('graph-count').textContent = '423';
+    document.getElementById('graph-active').textContent = '8';
+    document.getElementById('graph-today').textContent = '67';
+
+    document.getElementById('knowledge-count').textContent = '25';
+    document.getElementById('knowledge-docs').textContent = '1,892';
+    document.getElementById('knowledge-vectors').textContent = '45.6K';
+
+    document.getElementById('llm-count').textContent = '12.4K';
+    document.getElementById('llm-tokens').textContent = '1.2M';
+    document.getElementById('llm-cost').textContent = '¥234';
+
+    document.getElementById('user-count').textContent = '156';
+    document.getElementById('user-active').textContent = '89';
+    document.getElementById('user-new').textContent = '5';
+}
+
+function drawExecutionTrend() {
+    const ctx = document.getElementById('executionTrend').getContext('2d');
+    new Chart(ctx, {
+        type: 'line',
+        data: {
+            labels: ['周一', '周二', '周三', '周四', '周五', '周六', '周日'],
+            datasets: [{
+                label: '执行次数',
+                data: [120, 150, 180, 140, 200, 160, 190],
+                borderColor: 'rgb(75, 192, 192)',
+                backgroundColor: 'rgba(75, 192, 192, 0.2)',
+                tension: 0.3
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+                legend: {
+                    display: false
+                }
+            },
+            scales: {
+                y: {
+                    beginAtZero: true
+                }
+            }
+        }
+    });
+}
+
+function drawSystemLoad() {
+    const ctx = document.getElementById('systemLoad').getContext('2d');
+    new Chart(ctx, {
+        type: 'bar',
+        data: {
+            labels: ['CPU', '内存', '磁盘', '网络'],
+            datasets: [{
+                label: '使用率',
+                data: [42, 65, 30, 55],
+                backgroundColor: [
+                    'rgba(255, 99, 132, 0.5)',
+                    'rgba(54, 162, 235, 0.5)',
+                    'rgba(255, 206, 86, 0.5)',
+                    'rgba(75, 192, 192, 0.5)'
+                ],
+                borderColor: [
+                    'rgba(255, 99, 132, 1)',
+                    'rgba(54, 162, 235, 1)',
+                    'rgba(255, 206, 86, 1)',
+                    'rgba(75, 192, 192, 1)'
+                ],
+                borderWidth: 1
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+                legend: {
+                    display: false
+                }
+            },
+            scales: {
+                y: {
+                    beginAtZero: true,
+                    max: 100
+                }
+            }
+        }
+    });
+}
+
+function loadActivityLog() {
+    // 模拟活动数据
+    const activities = [
+        { time: '2分钟前', type: '任务执行', desc: 'Graph #234 执行完成', status: '成功', statusClass: 'success' },
+        { time: '5分钟前', type: '知识库', desc: '新文档上传', status: '处理中', statusClass: 'warning' },
+        { time: '10分钟前', type: 'LLM调用', desc: 'GPT-4 调用', status: '成功', statusClass: 'success' },
+        { time: '15分钟前', type: '用户', desc: '新用户注册', status: '完成', statusClass: 'info' },
+        { time: '20分钟前', type: '任务执行', desc: 'Graph #233 执行失败', status: '失败', statusClass: 'danger' },
+    ];
+
+    const tbody = document.getElementById('activity-log');
+    tbody.innerHTML = activities.map(activity => `
+        <tr>
+            <td>${activity.time}</td>
+            <td>${activity.type}</td>
+            <td>${activity.desc}</td>
+            <td><span class="badge badge-${activity.statusClass}">${activity.status}</span></td>
+            <td>
+                <a href="#" class="btn btn-sm btn-outline-primary">查看</a>
+            </td>
+        </tr>
+    `).join('');
+}
+</script>
+{% endblock %}

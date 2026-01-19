@@ -1,0 +1,176 @@
+# 企业用户配额模板
+name: "enterprise_user"
+display_name: "企业用户"
+description: "企业级用户配额配置，适合团队和组织使用"
+
+# 积分系统
+credits:
+  monthly_credits: 50000      # 月度积分（5倍于VIP用户）
+  daily_credits: -1           # 无每日限制
+  
+  # 模型调用成本（每次调用消耗的积分）
+  model_costs:
+    "gpt-3.5-turbo": 0.8      # 企业用户享受8折
+    "gpt-3.5-turbo-16k": 1.6    
+    "gpt-4": 8                # GPT-4 8折优惠
+    "gpt-4-turbo": 6.4          
+    "gpt-4-vision": 9.6         
+    "gpt-4o": 10              # 最新模型
+    "claude-3-haiku": 0.8       
+    "claude-3-sonnet": 4      # Claude中级模型8折
+    "claude-3-opus": 8        # Claude最强模型8折
+    "claude-3.5-sonnet": 6    # Claude 3.5
+    "deepseek-chat": 0.4      
+    "deepseek-coder": 0.6     
+    "qwen-turbo": 0.4         
+    "qwen-plus": 1.6          
+    "qwen-max": 4             # 通义千问Max
+    # 支持所有企业级模型
+    
+  # Token成本（每1000 token消耗的积分）- 企业优惠价
+  token_costs:
+    "gpt-3.5-turbo":
+      input_per_1k: 0.08      # 8折优惠
+      output_per_1k: 0.16      
+    "gpt-4":
+      input_per_1k: 0.24      # 8折优惠
+      output_per_1k: 0.48
+    "gpt-4-turbo":
+      input_per_1k: 0.2
+      output_per_1k: 0.4
+    "gpt-4o":
+      input_per_1k: 0.25
+      output_per_1k: 0.5
+    "claude-3-opus":
+      input_per_1k: 0.24
+      output_per_1k: 0.48
+    "claude-3.5-sonnet":
+      input_per_1k: 0.12
+      output_per_1k: 0.24
+    "claude-3-sonnet":
+      input_per_1k: 0.12
+      output_per_1k: 0.24
+    # 默认token成本
+    "default":
+      input_per_1k: 0.15
+      output_per_1k: 0.3
+
+# 限制配置（企业级限制）
+limits:
+  max_tokens_per_request: 16000   # 大上下文支持
+  max_requests_per_minute: 60     # 每分钟60次请求
+  max_requests_per_hour: 1200     # 每小时1200次请求
+  concurrent_tasks: 5              # 5个并发任务
+
+# 存储配额
+storage:
+  space_mb: 5000                  # 5GB存储空间
+  max_documents: 500               # 500个文档
+  max_file_mb: 50                  # 单文件50MB上限
+
+# 功能权限（企业级功能）
+features:
+  knowledge_base: -1               # 无限制使用
+  advanced_tools: -1               # 无限制使用
+  workflow_creation: 100           # 可创建100个工作流
+  api_access: -1                   # 无限制API调用
+  export_data: 1                   # 数据导出
+  priority_support: 1              # 优先支持
+  custom_prompts: 1                # 自定义提示词
+  team_collaboration: 1            # 团队协作功能
+  role_management: 1               # 角色管理
+  audit_logs: 1                    # 审计日志
+  custom_integration: 1            # 自定义集成
+  
+# 积分策略
+credit_policies:
+  reset_cycle: "monthly"           # 月度重置
+  carry_over: true                 # 允许积分结转
+  carry_over_limit: 0.5            # 可50%结转
+  allow_purchase: true             # 允许购买额外积分
+  purchase_rate: 0.006             # 企业用户优惠价格（元/积分）
+  
+  # 积分获取方式（企业额外奖励）
+  earning_rules:
+    daily_login: 30                # 每日登录奖励
+    invite_user: 300               # 邀请新用户奖励
+    complete_profile: 150          # 完善资料奖励
+    monthly_bonus: 1000            # 企业月度奖励
+    quarterly_bonus: 5000          # 季度奖励
+    
+  # 超额使用策略
+  overage:
+    allow: true                    # 允许超额使用
+    rate_per_credit: 0.008         # 企业超额费率（元/积分）
+    auto_purchase: true            # 可设置自动购买
+    auto_purchase_amount: 5000     # 自动购买数量
+    notification_threshold: 0.2    # 剩余20%时通知
+
+# 企业特权
+privileges:
+  priority_queue: true             # 优先级队列
+  batch_processing: true           # 批量处理
+  custom_models: true              # 自定义模型配置
+  advanced_analytics: true         # 高级分析功能
+  dedicated_account_manager: true  # 专属客户经理
+  sla_guarantee: true              # SLA保证
+  
+  # 团队功能
+  team_management: true            # 团队管理
+  sub_accounts: 5                  # 可创建5个子账号
+  shared_credits: true             # 积分共享池
+  usage_tracking: true             # 使用情况跟踪
+  department_quotas: true          # 部门配额管理
+  
+  # 管理功能
+  admin_dashboard: true            # 管理仪表板
+  usage_analytics: true            # 使用分析
+  cost_center_allocation: true    # 成本中心分配
+  invoice_management: true         # 发票管理
+  
+# 安全与合规
+security:
+  sso_integration: true            # 单点登录集成
+  ldap_support: true               # LDAP支持
+  saml_support: true               # SAML支持
+  ip_whitelist: true               # IP白名单
+  data_encryption: "aes256"        # 数据加密标准
+  
+# 合规性配置
+compliance:
+  data_residency: "china"          # 数据存储区域（中国境内）
+  encryption: "aes256"             # 加密标准
+  gdpr_compliant: true             # GDPR合规
+  audit_logs: true                 # 审计日志
+  data_retention_days: 365         # 数据保留天数
+  compliance_reports: true         # 合规报告
+  
+# 通知设置
+notifications:
+  low_credit_threshold: 2000      # 积分低于2000时提醒
+  usage_report: "daily"           # 每日使用报告
+  monthly_summary: true            # 月度总结报告
+  weekly_team_report: true         # 周团队报告
+  api_webhooks: true               # Webhook通知支持
+  
+  # 多级预警
+  threshold_alerts:               
+    - threshold: 0.5              # 剩余50%时
+      method: "email"
+      recipients: ["admin"]
+    - threshold: 0.2              # 剩余20%时
+      method: "email+sms"
+      recipients: ["admin", "finance"]
+    - threshold: 0.1              # 剩余10%时
+      method: "email+sms+phone"
+      recipients: ["admin", "finance", "manager"]
+      
+# 企业服务
+enterprise_services:
+  training_sessions: 3             # 培训课程次数
+  onboarding_support: true         # 入职支持
+  custom_training: true            # 定制培训
+  technical_support: "24x7"        # 技术支持时间
+  response_time_hours: 4           # 响应时间（小时）
+  dedicated_slack_channel: true    # 专属Slack频道
+  quarterly_review: true           # 季度业务回顾

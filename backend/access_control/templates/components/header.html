@@ -1,0 +1,16 @@
+<header class="header">
+    <div class="container">
+        <div class="header-content">
+            <div class="logo">
+                <h1>CHAGEE X</h1>
+            </div>
+            <div class="user-status">
+                {% if user.is_authenticated %}
+                    <span>欢迎, {{ user.username }}</span>
+                {% else %}
+                    <span>未登录</span>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</header>

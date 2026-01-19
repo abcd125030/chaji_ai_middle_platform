@@ -1,0 +1,111 @@
+{
+	"messages": {
+		"type": "array",
+		"items": {
+			"type": "object",
+			"properties": {
+				"role": {
+					"type": "string",
+					"enum": ["user", "assistant", "system", "tool"]
+				},
+				"content": {
+					"oneOf": [
+						{ "type": "string" },
+						{
+							"type": "array",
+							"items": {
+								"type": "object",
+								"properties": {
+									"type": { "type": "string", "enum": ["text", "image_url"] },
+									"text": { "type": "string" },
+									"image_url": {
+										"type": "object",
+										"properties": {
+											"url": { "type": "string" },
+											"detail": { "type": "string" }
+										}
+									}
+								}
+							}
+						}
+					]
+				},
+				"name": { "type": "string" },
+				"tool_call_id": { "type": "string" }
+			}
+		}
+	},
+	"prompt": { "type": "string" },
+	"model": { "type": "string" },
+	"response_format": { 
+		"type": "object",
+		"properties": {
+			"type": { "type": "string", "enum": ["json_object"] }
+		}
+	},
+	"stop": {
+		"oneOf": [
+			{ "type": "string" },
+			{ "type": "array", "items": { "type": "string" } }
+		]
+	},
+	"stream": { "type": "boolean" },
+	"max_tokens": { "type": "integer", "minimum": 1 },
+	"temperature": { "type": "number", "minimum": 0, "maximum": 2 },
+	"tools": {
+		"type": "array",
+		"items": {
+			"type": "object",
+			"properties": {
+				"type": { "type": "string", "enum": ["function"] },
+				"function": {
+					"type": "object",
+					"properties": {
+						"description": { "type": "string" },
+						"name": { "type": "string" },
+						"parameters": { "type": "object" }
+					},
+					"required": ["name", "parameters"]
+				}
+			}
+		}
+	},
+	"tool_choice": {
+		"oneOf": [
+			{ "type": "string", "enum": ["none", "auto"] },
+			{
+				"type": "object",
+				"properties": {
+					"type": { "type": "string", "enum": ["function"] },
+					"function": {
+						"type": "object",
+						"properties": {
+							"name": { "type": "string" }
+						}
+					}
+				}
+			}
+		]
+	},
+	"seed": { "type": "integer" },
+	"top_p": { "type": "number", "minimum": 0, "exclusiveMinimum": true, "maximum": 1 },
+	"top_k": { "type": "integer", "minimum": 1 },
+	"frequency_penalty": { "type": "number", "minimum": -2, "maximum": 2 },
+	"presence_penalty": { "type": "number", "minimum": -2, "maximum": 2 },
+	"repetition_penalty": { "type": "number", "minimum": 0, "exclusiveMinimum": true, "maximum": 2 },
+	"logit_bias": { "type": "object" },
+	"top_logprobs": { "type": "integer" },
+	"min_p": { "type": "number", "minimum": 0, "maximum": 1 },
+	"top_a": { "type": "number", "minimum": 0, "maximum": 1 },
+	"prediction": {
+		"type": "object",
+		"properties": {
+			"type": { "type": "string", "enum": ["content"] },
+			"content": { "type": "string" }
+		}
+	},
+	"transforms": { "type": "array", "items": { "type": "string" } },
+	"models": { "type": "array", "items": { "type": "string" } },
+	"route": { "type": "string" },
+	"provider": { "type": "object" }
+}

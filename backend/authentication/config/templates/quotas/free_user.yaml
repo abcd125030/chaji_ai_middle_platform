@@ -1,0 +1,72 @@
+# 免费用户配额模板
+name: "free_user"
+display_name: "免费用户"
+description: "基础免费用户配额限制"
+
+# 积分系统
+credits:
+  monthly_credits: 1000       # 月度积分
+  daily_credits: 50           # 每日积分上限（可选）
+  
+  # 模型调用成本（每次调用消耗的积分）
+  model_costs:
+    "gpt-3.5-turbo": 1        # 基础模型，1积分/次
+    "gpt-3.5-turbo-16k": 2    # 长上下文版本
+    "gpt-4": 0                # 免费用户禁用GPT-4
+    "gpt-4-turbo": 0          # 免费用户禁用
+    "claude-3-haiku": 1       # Claude最便宜的模型
+    "claude-3-sonnet": 0      # 免费用户禁用
+    "claude-3-opus": 0        # 免费用户禁用
+    "deepseek-chat": 0.5      # 更便宜的选择
+    "qwen-turbo": 0.5         # 通义千问
+    
+  # Token成本（每1000 token消耗的积分）
+  token_costs:
+    "gpt-3.5-turbo":
+      input_per_1k: 0.1       # 输入每1k token消耗0.1积分
+      output_per_1k: 0.2      # 输出每1k token消耗0.2积分
+    "deepseek-chat":
+      input_per_1k: 0.05
+      output_per_1k: 0.1
+    "qwen-turbo":
+      input_per_1k: 0.05
+      output_per_1k: 0.1
+
+# 限制配置
+limits:
+  max_tokens_per_request: 2000    # 单次请求最大token
+  max_requests_per_minute: 5      # 每分钟最多5次请求
+  max_requests_per_hour: 100      # 每小时最多100次请求
+  concurrent_tasks: 1              # 最大并发任务数
+
+# 存储配额
+storage:
+  space_mb: 100                   # 存储空间（MB）
+  max_documents: 10                # 最大文档数
+  max_file_mb: 5                   # 单文件大小上限（MB）
+
+# 功能权限
+features:
+  knowledge_base: 1                # 知识库访问（1=启用，0=禁用）
+  advanced_tools: 0                # 高级工具（禁用）
+  workflow_creation: 0             # 工作流创建（禁用）
+  api_access: 0                    # API访问（禁用）
+  export_data: 0                   # 数据导出（禁用）
+
+# 积分策略
+credit_policies:
+  reset_cycle: "monthly"           # 重置周期：daily/weekly/monthly
+  carry_over: false                # 是否允许积分结转到下个周期
+  allow_purchase: true             # 是否允许购买额外积分
+  purchase_rate: 0.01              # 购买价格（元/积分）
+  
+  # 积分获取方式
+  earning_rules:
+    daily_login: 10                # 每日登录奖励
+    invite_user: 100              # 邀请新用户奖励
+    complete_profile: 50          # 完善资料奖励
+
+# 通知设置
+notifications:
+  low_credit_threshold: 100       # 积分低于100时提醒
+  usage_report: "weekly"          # 使用报告频率

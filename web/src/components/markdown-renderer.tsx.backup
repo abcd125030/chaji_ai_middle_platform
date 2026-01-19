@@ -1,0 +1,489 @@
+'use client';
+
+import React, { useState } from 'react';
+import ReactMarkdown from 'react-markdown';
+import remarkGfm from 'remark-gfm';
+import remarkMath from 'remark-math';
+import rehypeRaw from 'rehype-raw';
+import rehypeKatex from 'rehype-katex';
+import katex from 'katex';
+import 'katex/dist/katex.min.css';
+import type { Components } from 'react-markdown';
+
+interface MarkdownRendererProps {
+  content: string;
+  baseUrl?: string;
+}
+
+interface ImageViewerProps {
+  src: string;
+  alt: string;
+  onClose: () => void;
+}
+
+// 图片查看器组件
+const ImageViewer: React.FC<ImageViewerProps> = ({ src, alt, onClose }) => {
+  const [scale, setScale] = useState(1);
+
+  const handleWheel = (e: React.WheelEvent) => {
+    e.preventDefault();
+    const delta = e.deltaY * -0.001;
+    const newScale = Math.min(Math.max(0.5, scale + delta), 3);
+    setScale(newScale);
+  };
+
+  return (
+    <div
+      className="fixed inset-0 z-50 bg-black/90 flex items-center justify-center"
+      onClick={onClose}
+    >
+      <button
+        className="absolute top-4 right-4 text-white text-2xl hover:text-gray-300"
+        onClick={onClose}
+      >
+        ✕
+      </button>
+      <div
+        className="relative max-w-[90vw] max-h-[90vh] overflow-auto"
+        onClick={(e) => e.stopPropagation()}
+        onWheel={handleWheel}
+      >
+        {/* eslint-disable-next-line @next/next/no-img-element */}
+        <img
+          src={src}
+          alt={alt}
+          style={{ transform: `scale(${scale})` }}
+          className="transition-transform duration-200"
+        />
+      </div>
+      <div className="absolute bottom-4 left-1/2 transform -translate-x-1/2 text-white text-sm">
+        滚轮缩放 • 点击背景关闭
+      </div>
+    </div>
+  );
+};
+
+// Markdown渲染器组件
+export const MarkdownRenderer: React.FC<MarkdownRendererProps> = ({
+  content,
+  baseUrl = ''
+}) => {
+  const [viewerImage, setViewerImage] = useState<{ src: string; alt: string } | null>(null);
+
+  // 处理图片URL
+  const processImageUrl = (url: string): string => {
+    if (url.startsWith('http')) {
+      return url;
+    }
+    if (url.startsWith('/media/')) {
+      return `${baseUrl}${url}`;
+    }
+    return url;
+  };
+
+  // 自定义组件配置
+  const components: Components = {
+    // 数学公式（核心修复：直接使用 katex 渲染，避免 HTML 转义）
+    code: ({ inline, className, children, ...props }: any) => {
+      const match = /language-(\w+)/.exec(className || '');
+      const value = String(children).replace(/\n$/, '');
+
+      // 处理 LaTeX 数学公式
+      if (className === 'language-math' && !inline) {
+        console.log('[自定义 code 组件] 渲染块公式，原始值:', value);
+        // 还原被保护的 &
+        const restoredValue = value.replace(/__LATEX_AMP__/g, '&');
+        console.log('[自定义 code 组件] 还原后:', restoredValue);
+
+        try {
+          const html = katex.renderToString(restoredValue, {
+            displayMode: true,
+            throwOnError: false,
+            strict: false,
+            trust: true
+          });
+          return <div dangerouslySetInnerHTML={{ __html: html }} />;
+        } catch (e) {
+          console.error('[自定义 code 组件] KaTeX 渲染错误:', e);
+          return <code className="katex-error">{value}</code>;
+        }
+      }
+
+      // 处理行内 LaTeX 公式
+      if (className === 'language-math' && inline) {
+        const restoredValue = value.replace(/__LATEX_AMP__/g, '&');
+        try {
+          const html = katex.renderToString(restoredValue, {
+            displayMode: false,
+            throwOnError: false,
+            strict: false,
+            trust: true
+          });
+          return <span dangerouslySetInnerHTML={{ __html: html }} />;
+        } catch (e) {
+          console.error('[自定义 code 组件] KaTeX 渲染错误:', e);
+          return <code className="katex-error">{value}</code>;
+        }
+      }
+
+      // 处理普通代码块
+      if (!inline && match) {
+        return (
+          <code className={`${className || ''} text-[#EDEDED] font-mono text-sm`} {...props}>
+            {children}
+          </code>
+        );
+      }
+
+      // 处理行内代码
+      return (
+        <code
+          className="bg-[#0A0A0A] text-[#EDEDED] px-1.5 py-0.5 rounded text-sm font-mono border border-[#1A1A1A]"
+          {...props}
+        >
+          {children}
+        </code>
+      );
+    },
+
+    // 标题
+    h1: ({ children, ...props }) => (
+      <h1 className="text-2xl font-bold mt-6 mb-4 text-white border-b border-[#1A1A1A] pb-2" {...props}>
+        {children}
+      </h1>
+    ),
+    h2: ({ children, ...props }) => (
+      <h2 className="text-xl font-bold mt-5 mb-3 text-white" {...props}>
+        {children}
+      </h2>
+    ),
+    h3: ({ children, ...props }) => (
+      <h3 className="text-lg font-semibold mt-4 mb-2 text-[#EDEDED]" {...props}>
+        {children}
+      </h3>
+    ),
+    h4: ({ children, ...props }) => (
+      <h4 className="text-base font-semibold mt-3 mb-2 text-[#EDEDED]" {...props}>
+        {children}
+      </h4>
+    ),
+    h5: ({ children, ...props }) => (
+      <h5 className="text-sm font-semibold mt-2 mb-1 text-[#EDEDED]" {...props}>
+        {children}
+      </h5>
+    ),
+    h6: ({ children, ...props }) => (
+      <h6 className="text-xs font-semibold mt-2 mb-1 text-[#888888]" {...props}>
+        {children}
+      </h6>
+    ),
+
+    // 段落
+    p: ({ children, ...props }) => (
+      <p className="mb-4 text-[#EDEDED] leading-relaxed" {...props}>
+        {children}
+      </p>
+    ),
+
+    // 列表
+    ul: ({ children, ...props }) => (
+      <ul className="mb-4 ml-6 list-disc text-[#EDEDED] space-y-1" {...props}>
+        {children}
+      </ul>
+    ),
+    ol: ({ children, ...props }) => (
+      <ol className="mb-4 ml-6 list-decimal text-[#EDEDED] space-y-1" {...props}>
+        {children}
+      </ol>
+    ),
+    li: ({ children, ...props }) => (
+      <li className="mb-1" {...props}>
+        {children}
+      </li>
+    ),
+
+    // 引用
+    blockquote: ({ children, ...props }) => (
+      <blockquote
+        className="border-l-4 border-[#888888] pl-4 py-2 mb-4 text-[#888888] italic bg-[#0A0A0A] rounded-r"
+        {...props}
+      >
+        {children}
+      </blockquote>
+    ),
+
+    // pre 代码块容器
+    pre: ({ children, ...props }) => (
+      <pre
+        className="bg-[#0A0A0A] p-4 rounded-lg mb-4 overflow-x-auto border border-[#1A1A1A]"
+        {...props}
+      >
+        {children}
+      </pre>
+    ),
+
+    // 表格
+    table: ({ children, ...props }) => (
+      <div className="mb-4 overflow-x-auto">
+        <table className="min-w-full border-collapse border border-[#1A1A1A]" {...props}>
+          {children}
+        </table>
+      </div>
+    ),
+    thead: ({ children, ...props }) => (
+      <thead className="bg-[#0A0A0A]" {...props}>
+        {children}
+      </thead>
+    ),
+    tbody: ({ children, ...props }) => (
+      <tbody {...props}>
+        {children}
+      </tbody>
+    ),
+    tr: ({ children, ...props }) => (
+      <tr className="border-b border-[#1A1A1A] hover:bg-[#0A0A0A] transition-colors" {...props}>
+        {children}
+      </tr>
+    ),
+    th: ({ children, ...props }) => (
+      <th className="border border-[#1A1A1A] px-4 py-2 text-left text-white font-semibold" {...props}>
+        {children}
+      </th>
+    ),
+    td: ({ children, ...props }) => (
+      <td className="border border-[#1A1A1A] px-4 py-2 text-[#EDEDED]" {...props}>
+        {children}
+      </td>
+    ),
+
+    // 链接
+    a: ({ href, children, ...props }) => (
+      <a
+        href={href}
+        className="text-blue-400 hover:text-blue-300 underline transition-colors"
+        target="_blank"
+        rel="noopener noreferrer"
+        {...props}
+      >
+        {children}
+      </a>
+    ),
+
+    // 图片
+    img: ({ src, alt, ...props }) => {
+      const srcString = typeof src === 'string' ? src : '';
+      const imgSrc = processImageUrl(srcString);
+      return (
+        <span
+          className="inline-block my-4 cursor-pointer"
+          onClick={() => setViewerImage({ src: imgSrc, alt: alt || '' })}
+        >
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img
+            src={imgSrc}
+            alt={alt || ''}
+            className="max-w-full h-auto rounded-lg border border-[#1A1A1A] hover:border-[#888888] transition-colors"
+            loading="lazy"
+            onError={(e) => {
+              const img = e.target as HTMLImageElement;
+              // 设置占位图
+              img.src = 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNDAwIiBoZWlnaHQ9IjMwMCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj4KICA8cmVjdCB3aWR0aD0iNDAwIiBoZWlnaHQ9IjMwMCIgZmlsbD0iIzFhMWExYSIvPgogIDx0ZXh0IHg9IjUwJSIgeT0iNTAlIiBmb250LWZhbWlseT0iQXJpYWwsIHNhbnMtc2VyaWYiIGZvbnQtc2l6ZT0iMTgiIGZpbGw9IiM4ODg4ODgiIHRleHQtYW5jaG9yPSJtaWRkbGUiIGR5PSIuM2VtIj7lm77niYfliqDovb3lpLHotKU8L3RleHQ+Cjwvc3ZnPg==';
+              img.style.maxWidth = '400px';
+              img.style.maxHeight = '300px';
+            }}
+            {...props}
+          />
+        </span>
+      );
+    },
+
+    // 水平分割线
+    hr: ({ ...props }) => (
+      <hr className="my-6 border-[#1A1A1A]" {...props} />
+    ),
+
+    // 强调
+    strong: ({ children, ...props }) => (
+      <strong className="font-bold text-white" {...props}>
+        {children}
+      </strong>
+    ),
+    em: ({ children, ...props }) => (
+      <em className="italic text-[#EDEDED]" {...props}>
+        {children}
+      </em>
+    ),
+  };
+
+  // 预处理 markdown 内容（保留基本格式化）
+  const preprocessContent = (text: string): string => {
+    console.log('[MarkdownRenderer] 1️⃣ 原始内容总长度:', text.length);
+
+    // 清理连续的多个空行为最多2个空行
+    text = text.replace(/\n{3,}/g, '\n\n');
+
+    console.log('[MarkdownRenderer] 2️⃣ 预处理后总长度:', text.length);
+
+    return text;
+  };
+
+  // 自定义 remark 插件：还原被保护的 & 字符
+  const remarkRestoreAmpersand = () => {
+    return (tree: any) => {
+      // 递归遍历所有节点
+      const restore = (node: any) => {
+        // 处理 inlineMath 和 math 节点
+        if ((node.type === 'inlineMath' || node.type === 'math') && node.value) {
+          if (node.value.includes('__LATEX_AMP__')) {
+            console.log('[remarkRestoreAmpersand] 🔓 还原前:', node.value.substring(0, 100));
+            node.value = node.value.replace(/__LATEX_AMP__/g, '&');
+            console.log('[remarkRestoreAmpersand] 🔓 还原后:', node.value.substring(0, 100));
+          }
+        }
+
+        // 递归处理子节点
+        if (node.children) {
+          node.children.forEach(restore);
+        }
+      };
+
+      restore(tree);
+    };
+  };
+
+  // 还原插件：在 rehypeKatex 之前，将数学节点中的 &amp; 还原为 &
+  const rehypeRestoreAmpersand = () => {
+    return (tree: any) => {
+      console.log('[rehypeRestoreAmpersand] 🔧 开始修复 &amp; 转义');
+
+      let fixedCount = 0;
+      const process = (node: any, parent: any) => {
+        // 检查是否是数学公式节点（code with language-math class）
+        const isMathNode =
+          node.type === 'element' &&
+          node.tagName === 'code' &&
+          node.properties?.className &&
+          (node.properties.className.includes('language-math') ||
+           node.properties.className.includes('math-inline') ||
+           node.properties.className.includes('math-display'));
+
+        if (isMathNode && node.children) {
+          // 遍历子节点（文本节点）
+          node.children.forEach((child: any) => {
+            if (child.type === 'text' && child.value && child.value.includes('&amp;')) {
+              console.log('[rehypeRestoreAmpersand] 找到数学节点中的 &amp;:', child.value.substring(0, 100));
+              child.value = child.value.replace(/&amp;/g, '&');
+              fixedCount++;
+              console.log('[rehypeRestoreAmpersand] ✅ 修复后:', child.value.substring(0, 100));
+            }
+          });
+        }
+
+        // 递归处理子节点
+        if (node.children) {
+          node.children.forEach((child: any) => process(child, node));
+        }
+      };
+
+      process(tree, null);
+      console.log(`[rehypeRestoreAmpersand] 🔧 完成，共修复 ${fixedCount} 个节点`);
+    };
+  };
+
+  // 调试插件：检查 rehypeKatex 之后的状态
+  const rehypeDebugAfterKatex = () => {
+    return (tree: any) => {
+      console.log('[rehypeDebugAfterKatex] 📋 检查 rehypeKatex 处理后的结果');
+
+      const process = (node: any) => {
+        // 查找 katex 相关的节点
+        if (node.type === 'element' && node.properties?.className) {
+          const classes = node.properties.className;
+          if (classes.includes('katex') || classes.includes('katex-error')) {
+            console.log('[rehypeDebugAfterKatex] 找到 KaTeX 节点:', {
+              tagName: node.tagName,
+              className: classes,
+              children: node.children ? node.children.length : 0
+            });
+
+            // 如果是错误节点，打印错误信息
+            if (classes.includes('katex-error') && node.properties?.title) {
+              console.error('[rehypeDebugAfterKatex] ❌ KaTeX 错误:', node.properties.title);
+            }
+
+            // 打印部分内容
+            if (node.children && node.children.length > 0) {
+              console.log('[rehypeDebugAfterKatex] 子节点片段:', JSON.stringify(node.children[0], null, 2).substring(0, 300));
+            }
+          }
+        }
+
+        // 检查文本节点中是否还有 & 相关内容
+        if (node.type === 'text' && node.value) {
+          if (node.value.includes('&amp;')) {
+            console.warn('[rehypeDebugAfterKatex] ⚠️ 发现 &amp;:', node.value.substring(0, 100));
+          }
+          if (node.value.includes('array')) {
+            console.log('[rehypeDebugAfterKatex] 包含 array 的文本:', node.value.substring(0, 100));
+          }
+        }
+
+        // 递归处理子节点
+        if (node.children) {
+          node.children.forEach((child: any) => process(child));
+        }
+      };
+
+      process(tree);
+      console.log('[rehypeDebugAfterKatex] 📋 检查完成');
+    };
+  };
+
+  // KaTeX 配置选项
+  const katexOptions = {
+    strict: false as const,  // 禁用严格模式，允许Unicode字符
+    trust: true,             // 信任所有输入
+    throwOnError: false,     // 遇到错误时不抛出异常，而是渲染为红色
+    errorColor: '#cc0000',   // 错误颜色
+    fleqn: false,            // 不强制左对齐
+    macros: {
+      "\\eqref": "\\href{###1}{(\\text{#1})}",
+      "\\ref": "\\href{###1}{\\text{#1}}",
+      "\\label": "\\htmlId{#1}{}"
+    }
+  };
+
+  const processedContent = preprocessContent(content);
+
+  console.log('[MarkdownRenderer] 3️⃣ 传递给 ReactMarkdown 的内容准备就绪');
+
+  return (
+    <>
+      <div className="markdown-content text-[#EDEDED] text-sm leading-relaxed">
+        <ReactMarkdown
+          remarkPlugins={[
+            remarkGfm,
+            [remarkMath, { singleDollarTextMath: true }]  // 显式启用单$行内公式支持
+          ]}
+          rehypePlugins={[
+            rehypeRaw,  // 处理 HTML
+            rehypeRestoreAmpersand,  // 【核心修复】还原 __LATEX_AMP__ 为 &
+            [rehypeKatex, katexOptions],  // KaTeX 渲染（此时 & 已还原）
+            rehypeDebugAfterKatex  // 【调试】检查 rehypeKatex 之后的结果
+          ]}
+          components={components}
+        >
+          {processedContent}
+        </ReactMarkdown>
+      </div>
+
+      {viewerImage && (
+        <ImageViewer
+          src={viewerImage.src}
+          alt={viewerImage.alt}
+          onClose={() => setViewerImage(null)}
+        />
+      )}
+    </>
+  );
+};

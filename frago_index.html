@@ -1,0 +1,617 @@
+<!DOCTYPE html>
+<html lang="en"></html>
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>frago.ai - AI Smart Assistant Suite</title>
+    <style>
+        :root {
+            --color-background: #000000;
+            --color-background-secondary: #0A0A0A;
+            --color-background-hover: #1A1A1A;
+            --color-text-primary: #FFFFFF;
+            --color-text-secondary: #ADADAD;
+            --color-text-muted: #888888;
+            --color-button-primary: #EDEDED;
+            --color-button-text: #0A0A0A;
+            --color-border-primary: #EDEDED;
+            --color-border-secondary: #1A1A1A;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+            background-color: var(--color-background);
+            color: var(--color-text-primary);
+            line-height: 1.6;
+            overflow-x: hidden;
+        }
+
+        /* Background effects */
+        .background-effect {
+            position: fixed;
+            inset: 0;
+            z-index: -1;
+            background: radial-gradient(ellipse at top, rgba(25, 25, 25, 0.2), #000000);
+        }
+
+        /* Navigation */
+        nav {
+            position: fixed;
+            top: 0;
+            width: 100%;
+            padding: 1.5rem 2rem;
+            background: rgba(0, 0, 0, 0.8);
+            backdrop-filter: blur(10px);
+            border-bottom: 1px solid var(--color-border-secondary);
+            z-index: 1000;
+        }
+
+        .nav-container {
+            max-width: 1200px;
+            margin: 0 auto;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .logo {
+            font-size: 1.75rem;
+            font-weight: 700;
+            background: linear-gradient(180deg, #FFFFFF 0%, #ADADAD 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        /* Hero section */
+        .hero {
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            padding: 8rem 2rem 4rem;
+            text-align: center;
+            position: relative;
+        }
+
+        .hero h1 {
+            font-size: clamp(3rem, 8vw, 5.5rem);
+            font-weight: 700;
+            line-height: 1.1;
+            margin-bottom: 1.5rem;
+            letter-spacing: -0.02em;
+        }
+
+        .gradient-title {
+            background: linear-gradient(180deg, #FFFFFF 0%, #ADADAD 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .hero-subtitle {
+            font-size: 1.5rem;
+            color: var(--color-text-secondary);
+            margin-bottom: 3rem;
+            max-width: 600px;
+        }
+
+        /* Products section */
+        .products {
+            padding: 4rem 2rem 6rem;
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        .section-title {
+            text-align: center;
+            font-size: 3rem;
+            font-weight: 700;
+            margin-bottom: 1rem;
+            background: linear-gradient(180deg, #FFFFFF 0%, #ADADAD 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .section-subtitle {
+            text-align: center;
+            font-size: 1.25rem;
+            color: var(--color-text-secondary);
+            margin-bottom: 4rem;
+        }
+
+        .product-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+            gap: 2rem;
+        }
+
+        .product-card {
+            background: var(--color-background-secondary);
+            border: 1px solid var(--color-border-secondary);
+            border-radius: 16px;
+            padding: 2rem;
+            transition: all 0.3s ease;
+            position: relative;
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+            height: 100%;
+        }
+
+        .product-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 4px;
+            opacity: 0;
+            transition: opacity 0.3s ease;
+        }
+
+        .product-card:nth-child(1)::before {
+            background: linear-gradient(90deg, #FF6B6B 0%, #FFE66D 100%);
+        }
+
+        .product-card:nth-child(2)::before {
+            background: linear-gradient(90deg, #4ECDC4 0%, #44A08D 100%);
+        }
+
+        .product-card:nth-child(3)::before {
+            background: linear-gradient(90deg, #A8E6CF 0%, #7FD1B9 100%);
+        }
+
+        .product-card:hover {
+            transform: translateY(-4px);
+            border-color: rgba(255, 255, 255, 0.2);
+            box-shadow: 0 20px 40px rgba(255, 255, 255, 0.05);
+        }
+
+        .product-card:hover::before {
+            opacity: 1;
+        }
+
+        .product-icon {
+            width: 60px;
+            height: 60px;
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-bottom: 1.5rem;
+            font-size: 1.75rem;
+        }
+
+        .product-card:nth-child(1) .product-icon {
+            background: linear-gradient(135deg, #FF6B6B 0%, #FFE66D 100%);
+        }
+
+        .product-card:nth-child(2) .product-icon {
+            background: linear-gradient(135deg, #4ECDC4 0%, #44A08D 100%);
+        }
+
+        .product-card:nth-child(3) .product-icon {
+            background: linear-gradient(135deg, #A8E6CF 0%, #7FD1B9 100%);
+        }
+
+        .product-card h3 {
+            font-size: 1.75rem;
+            font-weight: 600;
+            margin-bottom: 0.5rem;
+            color: var(--color-text-primary);
+        }
+
+        .product-tag {
+            display: inline-block;
+            padding: 0.25rem 0.75rem;
+            border-radius: 20px;
+            font-size: 0.875rem;
+            margin-bottom: 1rem;
+        }
+
+        .product-card:nth-child(1) .product-tag {
+            background: rgba(255, 107, 107, 0.1);
+            border: 1px solid rgba(255, 107, 107, 0.3);
+            color: #FF6B6B;
+        }
+
+        .product-card:nth-child(2) .product-tag {
+            background: rgba(78, 205, 196, 0.1);
+            border: 1px solid rgba(78, 205, 196, 0.3);
+            color: #4ECDC4;
+        }
+
+        .product-card:nth-child(3) .product-tag {
+            background: rgba(168, 230, 207, 0.1);
+            border: 1px solid rgba(168, 230, 207, 0.3);
+            color: #7FD1B9;
+        }
+
+        .product-description {
+            color: var(--color-text-secondary);
+            line-height: 1.8;
+            margin-bottom: 1.5rem;
+            flex: 0 0 auto;
+        }
+
+        .product-features {
+            list-style: none;
+            margin-bottom: 2rem;
+            flex: 1 1 auto;
+        }
+
+        .product-features li {
+            color: var(--color-text-secondary);
+            padding: 0.5rem 0;
+            padding-left: 1.5rem;
+            position: relative;
+        }
+
+        .product-features li::before {
+            content: '✓';
+            position: absolute;
+            left: 0;
+        }
+
+        .product-card:nth-child(1) .product-features li::before {
+            color: #FF6B6B;
+        }
+
+        .product-card:nth-child(2) .product-features li::before {
+            color: #4ECDC4;
+        }
+
+        .product-card:nth-child(3) .product-features li::before {
+            color: #7FD1B9;
+        }
+
+        .cta-button {
+            display: inline-flex;
+            align-items: center;
+            padding: 0.75rem 1.5rem;
+            background: var(--color-button-primary);
+            color: var(--color-button-text);
+            border-radius: 8px;
+            text-decoration: none;
+            font-weight: 500;
+            transition: all 0.2s ease;
+            gap: 0.5rem;
+            align-self: flex-start;
+            margin-top: auto;
+        }
+
+        .cta-button:hover {
+            transform: translateX(4px);
+            box-shadow: 0 4px 12px rgba(237, 237, 237, 0.2);
+        }
+
+        .cta-button-secondary {
+            background: transparent;
+            color: var(--color-button-primary);
+            border: 1px solid var(--color-border-primary);
+        }
+
+        .cta-button-secondary:hover {
+            background: var(--color-background-hover);
+        }
+
+        /* Features section */
+        .features {
+            padding: 4rem 2rem;
+            background: var(--color-background-secondary);
+            border-top: 1px solid var(--color-border-secondary);
+        }
+
+        .features-grid {
+            max-width: 1200px;
+            margin: 0 auto;
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 3rem;
+            text-align: center;
+        }
+
+        .feature-item {
+            padding: 1rem;
+        }
+
+        .feature-icon {
+            font-size: 2.5rem;
+            margin-bottom: 1rem;
+            filter: grayscale(100%);
+            opacity: 0.8;
+        }
+
+        .feature-title {
+            font-size: 1.25rem;
+            margin-bottom: 0.5rem;
+            color: var(--color-text-primary);
+        }
+
+        .feature-description {
+            color: var(--color-text-muted);
+            font-size: 0.95rem;
+        }
+
+        /* Footer */
+        footer {
+            padding: 3rem 2rem;
+            text-align: center;
+            border-top: 1px solid var(--color-border-secondary);
+        }
+
+        .footer-content {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        .footer-text {
+            color: var(--color-text-muted);
+            font-size: 0.9rem;
+        }
+
+        /* Responsive design */
+        @media (max-width: 768px) {
+            .hero h1 {
+                font-size: 2.5rem;
+            }
+            
+            .hero-subtitle {
+                font-size: 1.125rem;
+            }
+            
+            .product-grid {
+                grid-template-columns: 1fr;
+            }
+            
+            .section-title {
+                font-size: 2rem;
+            }
+        }
+
+        /* Animations */
+        @keyframes fadeInUp {
+            from {
+                opacity: 0;
+                transform: translateY(20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .fade-in-up {
+            animation: fadeInUp 0.6s ease-out;
+        }
+
+        /* 滚动条样式 */
+        ::-webkit-scrollbar {
+            width: 2px !important;
+            height: 2px !important;
+        }
+
+        ::-webkit-scrollbar-track {
+            background: transparent !important;
+        }
+
+        ::-webkit-scrollbar-thumb {
+            background: var(--color-text-primary) !important;
+            border-radius: 1px !important;
+        }
+
+        ::-webkit-scrollbar-button {
+            display: none !important;
+        }
+
+        /* 强制重绘 hack */
+        html {
+            transform: translateZ(0);
+        }
+    </style>
+</head>
+<body>
+    <!-- Background effects -->
+    <div class="background-effect"></div>
+
+    <!-- Navigation -->
+    <nav>
+        <div class="nav-container">
+            <div class="logo">frago.ai</div>
+        </div>
+    </nav>
+
+    <!-- Hero section -->
+    <section class="hero">
+        <h1 class="gradient-title fade-in-up">frago.ai Ecosystem</h1>
+        <p class="hero-subtitle fade-in-up">Agentic Automated Workflows with Manual Flow Orchestration</p>
+    </section>
+
+    <!-- Products showcase -->
+    <section class="products">
+        <h2 class="section-title">Core Products</h2>
+        <p class="section-subtitle">Three product suites covering all AI workflow scenarios</p>
+        
+        <div class="product-grid">
+            <!-- frago Chrome Extension -->
+            <div class="product-card">
+                <div class="product-icon">
+                    <svg width="32" height="32" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                        <path d="M12 2L2 7V12C2 16.97 5.84 21.68 11 22.93C11.63 22.77 12.24 22.55 12.84 22.27L14.2 20.91C13.53 21.25 12.8 21.5 12 21.62C7.22 20.43 4 16.39 4 12V8.3L12 4.18L20 8.3V12.08L21.07 11.01C21.03 11 21 11 21 11V7L12 2Z" fill="white"/>
+                        <path d="M22 16L19 19L22 22L21 23L18 20L15 23L14 22L17 19L14 16L15 15L18 18L21 15L22 16Z" fill="white"/>
+                    </svg>
+                </div>
+                <h3>frago Extension</h3>
+                <span class="product-tag">Chrome Browser Extension</span>
+                <p class="product-description">
+                    Smart sidebar assistant that provides instant AI support while browsing. Get intelligent Q&A and information extraction based on current webpage content without switching pages.
+                </p>
+                <ul class="product-features">
+                    <li>Intelligent webpage content analysis</li>
+                    <li>Real-time Q&A conversations</li>
+                    <li>One-click collection and organization</li>
+                    <li>Multi-tab collaboration</li>
+                </ul>
+                <a href="https://chromewebstore.google.com/detail/fragoai/bbhkhjnoecgajjombcbkjcphndnckjio" 
+                   target="_blank" 
+                   class="cta-button">
+                    Install to Chrome →
+                </a>
+            </div>
+
+            <!-- frago Studio -->
+            <div class="product-card">
+                <div class="product-icon">
+                    <svg width="32" height="32" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                        <path d="M20 2H4C2.9 2 2 2.9 2 4V22L6 18H20C21.1 18 22 17.1 22 16V4C22 2.9 21.1 2 20 2ZM20 16H6L4 18V4H20V16Z" fill="white"/>
+                        <circle cx="8" cy="10" r="1.5" fill="white"/>
+                        <circle cx="12" cy="10" r="1.5" fill="white"/>
+                        <circle cx="16" cy="10" r="1.5" fill="white"/>
+                    </svg>
+                </div>
+                <h3>frago Studio</h3>
+                <span class="product-tag">Self-Learning Agentic AI</span>
+                <p class="product-description">
+                    Enterprise-grade AI middleware system integrating multiple large language models, supporting complex AI workflow orchestration. Achieve task automation through intelligent agent systems.
+                </p>
+                <ul class="product-features">
+                    <li>Multi-model intelligent switching</li>
+                    <li>Knowledge base management system</li>
+                    <li>Workflow automation</li>
+                    <li>Task tracking and management</li>
+                </ul>
+                <a href="https://www.frago.ai/_studio/" class="cta-button" target="_blank">
+                    Get Started →
+                </a>
+            </div>
+
+            <!-- frago Pagtive -->
+            <div class="product-card">
+                <div class="product-icon">
+                    <svg width="32" height="32" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                        <path d="M19 3H5C3.89 3 3 3.89 3 5V19C3 20.11 3.89 21 5 21H19C20.11 21 21 20.11 21 19V5C21 3.89 20.11 3 19 3ZM19 19H5V5H19V19Z" fill="white"/>
+                        <path d="M7 7H11V11H7V7Z" fill="white"/>
+                        <path d="M13 7H17V9H13V7Z" fill="white"/>
+                        <path d="M13 11H17V13H13V11Z" fill="white"/>
+                        <path d="M7 13H17V17H7V13Z" fill="white"/>
+                    </svg>
+                </div>
+                <h3>frago Pagtive</h3>
+                <span class="product-tag">Smart Page Generator</span>
+                <p class="product-description">
+                    AI-driven interactive page generation platform. Quickly generate professional presentation pages, product showcases, and interactive prototypes through natural language descriptions.
+                </p>
+                <ul class="product-features">
+                    <li>Natural language page generation</li>
+                    <li>Rich interactive effects</li>
+                    <li>Real-time preview editing</li>
+                    <li>One-click export and deployment</li>
+                </ul>
+                <a href="https://pagtive.frago.ai" class="cta-button" target="_blank">
+                    Get Started →
+                </a>
+            </div>
+        </div>
+    </section>
+
+    <!-- Features showcase -->
+    <section class="features">
+        <div class="features-grid">
+            <div class="feature-item">
+                <div class="feature-icon">
+                    <svg width="40" height="40" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                        <path d="M12 2L3 7V11C3 16.04 6.24 20.53 11 21.84V19.72C7.4 18.47 5 14.61 5 11V8.3L12 4.7L19 8.3V11C19 11.07 18.99 11.14 18.99 11.21L21 9.2V7L12 2Z" fill="#FF6B6B"/>
+                        <path d="M13 12L14.45 14.55L17.5 14.86L15.16 16.89L15.82 19.85L13 18.27L10.18 19.85L10.84 16.89L8.5 14.86L11.55 14.55L13 12Z" fill="#FF6B6B"/>
+                    </svg>
+                </div>
+                <h3 class="feature-title">Lightning Fast</h3>
+                <p class="feature-description">Millisecond response time, smooth user experience</p>
+            </div>
+            <div class="feature-item">
+                <div class="feature-icon">
+                    <svg width="40" height="40" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                        <path d="M12 1L3 5V11C3 16.55 6.84 21.74 12 23C17.16 21.74 21 16.55 21 11V5L12 1ZM19 11C19 15.52 16.02 19.69 12 20.93C7.98 19.69 5 15.52 5 11V6.3L12 3.19L19 6.3V11Z" fill="#4ECDC4"/>
+                        <path d="M12 6C13.66 6 15 7.34 15 9C15 10.66 13.66 12 12 12C10.34 12 9 10.66 9 9C9 7.34 10.34 6 12 6ZM12 8C11.45 8 11 8.45 11 9C11 9.55 11.45 10 12 10C12.55 10 13 9.55 13 9C13 8.45 12.55 8 12 8Z" fill="#4ECDC4"/>
+                        <path d="M12 13C14.21 13 16 14.79 16 17V20H8V17C8 14.79 9.79 13 12 13ZM10 18H14V17C14 15.9 13.1 15 12 15C10.9 15 10 15.9 10 17V18Z" fill="#4ECDC4"/>
+                    </svg>
+                </div>
+                <h3 class="feature-title">Data Security</h3>
+                <p class="feature-description">End-to-end encryption, enterprise-grade security</p>
+            </div>
+            <div class="feature-item">
+                <div class="feature-icon">
+                    <svg width="40" height="40" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                        <circle cx="12" cy="12" r="10" stroke="#FFE66D" stroke-width="2"/>
+                        <circle cx="12" cy="12" r="3" fill="#FFE66D"/>
+                        <path d="M12 2V6" stroke="#FFE66D" stroke-width="2"/>
+                        <path d="M12 18V22" stroke="#FFE66D" stroke-width="2"/>
+                        <path d="M2 12H6" stroke="#FFE66D" stroke-width="2"/>
+                        <path d="M18 12H22" stroke="#FFE66D" stroke-width="2"/>
+                    </svg>
+                </div>
+                <h3 class="feature-title">Precise Intelligence</h3>
+                <p class="feature-description">Deeply optimized AI models, accurate requirement understanding</p>
+            </div>
+            <div class="feature-item">
+                <div class="feature-icon">
+                    <svg width="40" height="40" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                        <path d="M7 3H17C18.1 3 19 3.9 19 5V9H21V11H19V13H21V15H19V19C19 20.1 18.1 21 17 21H7C5.9 21 5 20.1 5 19V15H3V13H5V11H3V9H5V5C5 3.9 5.9 3 7 3ZM7 5V19H17V5H7Z" fill="#A8E6CF"/>
+                        <rect x="9" y="8" width="6" height="2" fill="#A8E6CF"/>
+                        <rect x="9" y="11" width="6" height="2" fill="#A8E6CF"/>
+                        <rect x="9" y="14" width="6" height="2" fill="#A8E6CF"/>
+                    </svg>
+                </div>
+                <h3 class="feature-title">Flexible Extension</h3>
+                <p class="feature-description">Open ecosystem, unlimited possibilities</p>
+            </div>
+        </div>
+    </section>
+
+    <!-- Footer -->
+    <footer>
+        <div class="footer-content">
+            <p class="footer-text">© 2025 frago.ai - Building the future of AI productivity</p>
+        </div>
+    </footer>
+
+    <script>
+        // Add smooth scrolling
+        document.querySelectorAll('a[href^="#"]').forEach(anchor => {
+            anchor.addEventListener('click', function (e) {
+                e.preventDefault();
+                const target = document.querySelector(this.getAttribute('href'));
+                if (target) {
+                    target.scrollIntoView({ behavior: 'smooth' });
+                }
+            });
+        });
+
+        // Add scroll animations
+        const observerOptions = {
+            threshold: 0.1,
+            rootMargin: '0px 0px -50px 0px'
+        };
+
+        const observer = new IntersectionObserver((entries) => {
+            entries.forEach(entry => {
+                if (entry.isIntersecting) {
+                    entry.target.classList.add('fade-in-up');
+                }
+            });
+        }, observerOptions);
+
+        document.querySelectorAll('.product-card, .feature-item').forEach(el => {
+            observer.observe(el);
+        });
+    </script>
+</body>
+</html>

@@ -1,0 +1,392 @@
+# 系统架构
+
+企业级AI中台平台采用现代化的分布式微服务架构，确保高可用性、可扩展性和维护性。
+
+## 整体架构图
+
+```
+┌─────────────────────────────────────────────────────────────────┐
+│                      客户端层                                    │
+├─────────────────────────────────────────────────────────────────┤
+│  Web 浏览器  │  移动端APP  │  第三方集成  │  开发者工具          │
+└─────────────┬───────────────┬─────────────────┬─────────────────┘
+              │               │                 │
+┌─────────────▼───────────────▼─────────────────▼─────────────────┐
+│                      接入层                                     │
+├─────────────────────────────────────────────────────────────────┤
+│          CDN          │      负载均衡器      │    API网关        │
+└─────────────┬─────────────────────┬─────────────────────┬───────┘
+              │                     │                     │
+┌─────────────▼─────────────────────▼─────────────────────▼───────┐
+│                    应用服务层                                   │
+├─────────────────────────────────────────────────────────────────┤
+│  前端实例1  │  前端实例2  │  前端实例N  │    后端AI中台服务     │
+│  (Next.js)  │  (Next.js)  │  (Next.js)  │     (Django)        │
+└─────────────┬─────────────────────────────────────────┬───────┘
+              │                                         │
+┌─────────────▼─────────────────────────────────────────▼───────┐
+│                    数据存储层                                   │
+├─────────────────────────────────────────────────────────────────┤
+│   PostgreSQL    │     Redis      │   向量数据库   │  对象存储   │
+│   (主数据库)    │   (缓存/队列)   │   (Qdrant)    │   (MinIO)   │
+└─────────────────────────────────────────────────────────────────┘
+```
+
+## 核心设计原则
+
+### 1. 前后端分离
+- **前端**：纯业务展示层，无数据库依赖
+- **后端**：AI中台服务，统一数据管理
+- **优势**：独立部署、技术栈解耦、易于扩展
+
+### 2. 微服务架构
+```python
+# 后端服务模块化
+backend/
+├── authentication/     # 认证服务
+├── chat_sessions/      # 会话管理
+├── knowledge/          # 知识库服务
+├── agentic/           # AI代理工作流
+├── tools/             # 工具系统
+├── llm/               # 大语言模型服务
+└── customized/        # 定制功能
+```
+
+### 3. 事件驱动架构
+```python
+# Celery 异步任务队列
+@shared_task
+def process_document(file_id):
+    """异步处理文档"""
+    # 文档解析 -> 向量化 -> 存储
+    pass
+
+@shared_task  
+def generate_response(session_id, message):
+    """异步生成AI响应"""
+    # LLM推理 -> 工具调用 -> 结果返回
+    pass
+```
+
+## 前端架构
+
+### 技术栈
+- **框架**：Next.js 15.3.3 (React 19)
+- **语言**：TypeScript 5.x
+- **样式**：Tailwind CSS 4.x
+- **构建**：Turbopack
+- **包管理**：pnpm
+
+### 架构特点
+```typescript
+// 1. 服务端组件优先
+export default async function ChatPage() {
+  const sessions = await getSessions(); // 服务端数据获取
+  return <ClientChatComponent sessions={sessions} />;
+}
+
+// 2. API 代理模式
+// /app/api/chat/route.ts
+export async function POST(request: Request) {
+  return proxyToBackend(request, '/chat/messages');
+}
+
+// 3. 认证状态管理
+const response = await authFetch('/api/sessions', {
+  method: 'POST',
+  body: JSON.stringify(data)
+});
+```
+
+### 状态管理策略
+- **会话状态**：内存缓存 + 10分钟自动清理
+- **用户认证**：localStorage + JWT双重验证
+- **UI状态**：React useState/useReducer
+- **全局状态**：Context API（按需使用）
+
+## 后端架构
+
+### 技术栈
+- **框架**：Django 5.1.5 + DRF 3.14.0
+- **语言**：Python 3.9+
+- **数据库**：PostgreSQL (生产) / SQLite (开发)
+- **缓存/队列**：Redis 6+
+- **异步任务**：Celery 5.5.3
+- **Web服务器**：Daphne (ASGI)
+
+### AI工作流引擎
+```python
+# Graph-Node-Edge 架构
+class WorkflowGraph:
+    def __init__(self):
+        self.nodes = {}  # 节点：LLM、Tool、Router
+        self.edges = {}  # 边：数据流转
+    
+    async def execute(self, input_data):
+        """执行工作流"""
+        current_node = self.get_start_node()
+        while current_node:
+            result = await current_node.process(input_data)
+            current_node = self.get_next_node(result)
+        return result
+
+# 节点类型
+class LLMNode(BaseNode):
+    """大语言模型节点"""
+    async def process(self, data):
+        response = await self.llm_client.generate(data)
+        return response
+
+class ToolNode(BaseNode):
+    """工具执行节点"""
+    async def process(self, data):
+        result = await self.tool.execute(data)
+        return result
+
+class RouterNode(BaseNode):
+    """条件路由节点"""
+    async def process(self, data):
+        condition = self.evaluate_condition(data)
+        return {"next_node": condition}
+```
+
+### 数据库设计
+```sql
+-- 核心数据模型
+CREATE TABLE chat_sessions (
+    id UUID PRIMARY KEY,
+    user_id VARCHAR(255) NOT NULL,
+    title VARCHAR(500),
+    created_at TIMESTAMP,
+    updated_at TIMESTAMP
+);
+
+CREATE TABLE messages (
+    id UUID PRIMARY KEY,
+    session_id UUID REFERENCES chat_sessions(id),
+    role VARCHAR(20) NOT NULL, -- user/assistant/system
+    content TEXT NOT NULL,
+    files JSONB,
+    created_at TIMESTAMP
+);
+
+CREATE TABLE knowledge_collections (
+    id UUID PRIMARY KEY,
+    name VARCHAR(255) NOT NULL,
+    description TEXT,
+    embedding_model VARCHAR(100),
+    status VARCHAR(20), -- pending/processing/active
+    created_at TIMESTAMP
+);
+```
+
+## 数据存储策略
+
+### PostgreSQL - 主数据库
+```python
+# 配置优化
+DATABASES = {
+    'default': {
+        'ENGINE': 'django.db.backends.postgresql',
+        'OPTIONS': {
+            'MAX_CONNS': 20,
+            'CONN_MAX_AGE': 600,  # 连接复用
+        }
+    }
+}
+```
+
+### Redis - 缓存和队列
+```python
+# 多用途配置
+REDIS_CONFIG = {
+    'cache': {'db': 0},      # 应用缓存
+    'session': {'db': 1},    # 会话存储  
+    'celery': {'db': 2},     # 任务队列
+    'locks': {'db': 3},      # 分布式锁
+}
+```
+
+### 向量数据库 - Qdrant
+```python
+# 知识库向量存储
+from qdrant_client import QdrantClient
+
+client = QdrantClient(host="localhost", port=6333)
+
+# 创建集合
+client.create_collection(
+    collection_name="knowledge_base",
+    vectors_config=VectorParams(
+        size=1536,  # OpenAI embedding dimension
+        distance=Distance.COSINE
+    )
+)
+
+# 语义检索
+results = client.search(
+    collection_name="knowledge_base",
+    query_vector=query_embedding,
+    limit=5,
+    score_threshold=0.7
+)
+```
+
+## 安全架构
+
+### 认证与授权
+```python
+# JWT 双重令牌机制
+SIMPLE_JWT = {
+    'ACCESS_TOKEN_LIFETIME': timedelta(minutes=60),
+    'REFRESH_TOKEN_LIFETIME': timedelta(days=7),
+    'ROTATE_REFRESH_TOKENS': True,
+    'ALGORITHM': 'HS256',
+}
+
+# 权限控制
+class ChatPermission(BasePermission):
+    def has_permission(self, request, view):
+        # 白名单检查
+        if not user_in_whitelist(request.user):
+            return False
+        # 频率限制检查
+        return check_rate_limit(request.user)
+```
+
+### 数据安全
+- **传输加密**：TLS 1.3
+- **存储加密**：数据库字段级加密
+- **访问控制**：基于角色的权限管理
+- **审计日志**：完整操作记录
+
+## 性能优化
+
+### 前端优化
+```typescript
+// 1. 代码分割
+const LazyComponent = dynamic(() => import('./Component'), {
+  loading: () => <Loading />,
+  ssr: false
+});
+
+// 2. 图片优化
+import Image from 'next/image';
+<Image 
+  src="/image.jpg" 
+  width={800} 
+  height={600}
+  priority={true} // 关键图片预加载
+/>
+
+// 3. API 缓存
+export const revalidate = 3600; // 1小时缓存
+```
+
+### 后端优化
+```python
+# 1. 数据库查询优化
+class MessageViewSet(ModelViewSet):
+    def get_queryset(self):
+        return Message.objects.select_related('session')\
+                             .prefetch_related('files')
+
+# 2. 缓存策略
+@cache_page(60 * 15)  # 15分钟缓存
+def get_session_list(request):
+    return JsonResponse(data)
+
+# 3. 异步处理
+@database_sync_to_async
+def get_user_sessions(user_id):
+    return list(ChatSession.objects.filter(user_id=user_id))
+```
+
+## 监控与运维
+
+### 应用监控
+- **性能监控**：响应时间、吞吐量、错误率
+- **业务监控**：用户活跃度、功能使用情况
+- **基础设施监控**：CPU、内存、磁盘、网络
+
+### 日志管理
+```python
+# 结构化日志
+LOGGING = {
+    'version': 1,
+    'formatters': {
+        'json': {
+            '()': 'pythonjsonlogger.jsonlogger.JsonFormatter',
+            'format': '%(levelname)s %(name)s %(message)s'
+        }
+    },
+    'handlers': {
+        'file': {
+            'level': 'INFO',
+            'class': 'logging.handlers.RotatingFileHandler',
+            'filename': 'app.log',
+            'maxBytes': 10485760,  # 10MB
+            'backupCount': 5,
+            'formatter': 'json',
+        }
+    }
+}
+```
+
+## 部署架构
+
+### Docker 容器化
+```dockerfile
+# 前端 Dockerfile
+FROM node:18-alpine
+WORKDIR /app
+COPY package*.json ./
+RUN npm ci --only=production
+COPY . .
+RUN npm run build
+EXPOSE 3000
+CMD ["npm", "start"]
+
+# 后端 Dockerfile  
+FROM python:3.9-slim
+WORKDIR /app
+COPY requirements.txt .
+RUN pip install -r requirements.txt
+COPY . .
+EXPOSE 8000
+CMD ["daphne", "-b", "0.0.0.0", "-p", "8000", "config.asgi:application"]
+```
+
+### Kubernetes 编排
+```yaml
+# deployment.yaml
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: ai-platform-backend
+spec:
+  replicas: 3
+  selector:
+    matchLabels:
+      app: ai-platform-backend
+  template:
+    metadata:
+      labels:
+        app: ai-platform-backend
+    spec:
+      containers:
+      - name: backend
+        image: ai-platform-backend:latest
+        ports:
+        - containerPort: 8000
+        env:
+        - name: DATABASE_URL
+          valueFrom:
+            secretKeyRef:
+              name: db-secret
+              key: url
+```
+
+---
+
+*这个架构设计确保了系统的高可用性、可扩展性和维护性。如需了解具体实现细节，请查看相关技术文档。*

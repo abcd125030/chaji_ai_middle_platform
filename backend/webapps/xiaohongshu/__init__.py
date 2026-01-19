@@ -1,0 +1,1 @@
+# Xiaohongshu sentiment monitoring module
