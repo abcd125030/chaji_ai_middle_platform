@@ -6,9 +6,9 @@
 
 **基础 URL**: `/api/knowledge/`
 
-**版本**: v1.0.0
+**版本**: v1.0.1
 
-**更新日期**: 2025-05-30
+**更新日期**: 2026-01-20
 
 ## 通用约定
 
@@ -18,8 +18,9 @@
     - 当前 API 端点未强制要求用户认证
     - 敏感操作建议在网关层添加认证
 *   **配置管理**:
-    - `mem0ai` 核心配置(LLM、Embedder、向量存储等)通过后台管理界面(`KnowledgeConfig` 模型)进行设置
-    - 客户端可通过 `app_id` 和 `secret` 参数为单次请求指定特定的 LLM API 密钥
+    - 使用 `KnowledgeConfig` 在 Admin 中管理向量库与模型配置
+    - LLM 配置通过路由器与 `knowledge_config_bridge` 获取，支持 OpenAI 兼容端点
+    - `app_id`/`secret` 可用于扩展，当前不参与鉴权
 *   **错误处理**:
     - 4xx 错误表示客户端问题
     - 5xx 错误表示服务端问题
@@ -36,7 +37,7 @@
 
 **端点**: `POST /api/knowledge/data/add/`
 
-**描述**: 向指定的知识集合中添加新的文本内容，该内容将被 `mem0ai` 处理(向量化)并存储到 Qdrant 向量数据库。
+**描述**: 服务层对文本进行向量化并写入 Qdrant（LangChain `QdrantVectorStore`），不依赖 mem0。
 
 **方法**: `POST`
 
@@ -123,7 +124,7 @@
 
 **端点**: `POST /api/knowledge/data/query/`
 
-**描述**: 向指定的知识集合查询与问题相关的信息，`mem0ai` 会从 Qdrant 检索相关记忆片段，然后利用配置的 LLM 基于这些片段生成答案。
+**描述**: 服务层从 Qdrant 检索相关片段，并在有召回时使用配置的 LLM 生成答案。
 
 **方法**: `POST`
 
@@ -136,9 +137,9 @@
 
 | 参数              | 类型     | 是否必需 | 描述                                                                 |
 | ----------------- | -------- | -------- | -------------------------------------------------------------------- |
-| `user_id`         | String   | 是       | 用户唯一标识符，用于在 `mem0ai` 内部限定搜索范围。                     |
+| `user_id`         | String   | 是       | 用户唯一标识符，用于集合命名或服务层数据隔离。                         |
 | `collection_name` | String   | 是       | 要查询的目标知识集合的名称。                                           |
-| `app_id`          | String   | 否       | （可选）用于获取 LLM API 密钥的客户端应用 ID。如果提供，将通过内部认证服务获取 JWT token 作为该请求的 LLM API 密钥，覆盖通过 Admin 配置的默认 LLM API 密钥。 |
+| `app_id`          | String   | 否       | （可选）用于获取 LLM API 密钥的客户端应用 ID。若提供，将通过路由器配置覆盖默认 LLM 配置。 |
 | `secret`          | String   | 否       | （可选）用于获取 LLM API 密钥的客户端应用密钥。与 `app_id` 一同提供。       |
 | `query`           | String   | 是       | 用户提出的问题或查询语句。                                             |
 | `limit`           | Integer  | 否       | （可选）希望从向量数据库召回的最大记忆片段数量。默认为 `5`。             |
@@ -153,6 +154,42 @@
 }
 ```
 
+## 4. 更新知识数据
+- 端点: `POST /api/knowledge/data/update/`
+- 请求体:
+  - `item_id` (必需)
+  - `content` (可选)
+  - `metadata` (可选)
+  - `user_id` (可选，默认 `system`)
+- 成功响应 (200): `message`, `item_id`, `updated_fields`
+
+## 5. 删除知识数据
+- 端点: `POST /api/knowledge/data/delete/`
+- 请求体:
+  - `item_id` (必需)
+  - `user_id` (可选，默认 `system`)
+- 成功响应 (200): `message`, `item_id`
+
+## 6. 列出知识数据
+- 端点: `GET /api/knowledge/data/list/`
+- 查询参数: `collection_name` (可选), `page`, `page_size`, `status`
+- 成功响应 (200): `items`, `total_count`, `page`, `page_size`
+
+## 7. 批量添加知识
+- 端点: `POST /api/knowledge/data/batch_add/`
+- 请求体:
+  - `items` (必需，列表)
+  - `collection_name` (可选，默认 `default`)
+  - `user_id` (可选，默认 `system`)
+- 成功响应 (200): `success_count`, `failed_items`
+
+## 8. 批量删除知识
+- 端点: `POST /api/knowledge/data/batch_delete/`
+- 请求体:
+  - `item_ids` (必需，列表)
+  - `user_id` (可选，默认 `system`)
+- 成功响应 (200): `deleted_count`, `failed_items`
+
 ### 响应
 
 #### 成功响应 (Status Code: `200 OK`)
@@ -161,7 +198,7 @@
 | -------------------- | ------------- | -------------------------------------------------------------------- |
 | `answer`             | String        | LLM 基于召回的上下文生成的最终答案。如果未找到相关信息或LLM处理失败，可能包含提示信息。 |
 | `recalled_context_count` | Integer    | 从向量数据库召回并用于生成答案的记忆文本片段的数量。                       |
-| `raw_search_results` | Object        | （可选，可能在未来版本中移除或更改）`mem0ai` 的 `search()` 方法返回的原始结果。 |
+| `raw_search_results` | Object        | （可选）向量检索返回的原始结果，结构可能随版本调整。 |
 
 
 **响应示例**:
@@ -209,7 +246,7 @@
 
 **端点**: `POST /api/knowledge/data/search/`
 
-**描述**: 向指定的知识集合查询与问题相关的信息，`mem0ai` 会从 Qdrant 检索相关记忆片段并直接返回原始结果，**不经过 LLM 处理**。
+**描述**: 服务层从 Qdrant 检索相关片段并直接返回原始结果，**不经过 LLM 处理**。
 
 **方法**: `POST`
 
@@ -217,9 +254,9 @@
 
 | 参数              | 类型     | 是否必需 | 描述                                                                 |
 | ----------------- | -------- | -------- | -------------------------------------------------------------------- |
-| `user_id`         | String   | 是       | 用户唯一标识符，用于在 `mem0ai` 内部限定搜索范围。                     |
+| `user_id`         | String   | 是       | 用户唯一标识符，用于集合命名或服务层数据隔离。                         |
 | `collection_name` | String   | 是       | 要查询的目标知识集合的名称。                                           |
-| `app_id`          | String   | 否       | （可选）用于获取 LLM API 密钥的客户端应用 ID。虽然此接口不直接调用LLM，但初始化`mem0`实例时仍可能需要此认证流程。 |
+| `app_id`          | String   | 否       | （可选）用于获取 LLM API 密钥的客户端应用 ID。尽管此接口不直接调用 LLM，初始化配置仍可能通过路由器获取。 |
 | `secret`          | String   | 否       | （可选）用于获取 LLM API 密钥的客户端应用密钥。与 `app_id` 一同提供。       |
 | `query`           | String   | 是       | 用户提出的问题或查询语句。                                             |
 | `limit`           | Integer  | 否       | （可选）希望从向量数据库召回的最大记忆片段数量。默认为 `5`。             |

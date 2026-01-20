@@ -22,12 +22,12 @@ from qdrant_client import QdrantClient
 
 from .models import KnowledgeCollection, KnowledgeItem, KnowledgeInteraction, KnowledgeConfig
 from .services import KnowledgeService
+from .config_bridge import knowledge_config_bridge
 
-logger = logging.getLogger(__name__) # 新增
+logger = logging.getLogger(__name__)
 
 # 创建全局知识服务实例
 knowledge_service = KnowledgeService()
-
 
 # 辅助函数：获取内部认证服务的 JWT token
 def fetch_internal_jwt_token(app_id, secret):
@@ -183,8 +183,7 @@ class KnowledgeAddDataView(APIView):
         except ValueError as ve: 
             response_data = {"error": str(ve)}
             interaction_log.error_message = str(ve)
-            interaction_log.status_code = status.HTTP_500_INTERNAL_SERVER_ERROR # 如果是客户端配置问题，则为 400
-            # return Response(response_data, status=interaction_log.status_code) # 响应在 finally 之后处理
+            interaction_log.status_code = status.HTTP_400_BAD_REQUEST
         except Exception as e:
             response_data = {"error": f"添加数据失败: {str(e)}"}
             interaction_log.error_message = str(e)
@@ -271,7 +270,7 @@ class KnowledgeSearchView(APIView):
         except ValueError as ve: 
             response_data = {"error": str(ve)}
             interaction_log.error_message = str(ve)
-            interaction_log.status_code = status.HTTP_500_INTERNAL_SERVER_ERROR
+            interaction_log.status_code = status.HTTP_400_BAD_REQUEST
         except Exception as e:
             response_data = {"error": f"搜索数据失败: {str(e)}"}
             interaction_log.error_message = str(e)
@@ -377,27 +376,21 @@ class KnowledgeQueryView(APIView):
                 # 使用配置的LLM生成答案
                 from openai import OpenAI
                 
-                # 获取激活的配置
                 try:
-                    active_config = KnowledgeConfig.objects.get(is_active=True)
-                    
+                    llm_cfg = knowledge_config_bridge.get_llm_config()
                     client = OpenAI(
-                        api_key=active_config.llm_api_key,
-                        base_url=active_config.openai_base_url
+                        api_key=llm_cfg['config'].get('api_key'),
+                        base_url=llm_cfg['config'].get('openai_base_url')
                     )
-                    
                     chat_completion = client.chat.completions.create(
                         messages=[
                             {"role": "system", "content": "你是一个根据所提供上下文回答问题的助手。请简洁地回答。如果上下文不足，请说明。"},
                             {"role": "user", "content": context_for_llm}
                         ],
-                        model=active_config.llm_model_name,
-                        temperature=active_config.llm_temperature
+                        model=llm_cfg['config'].get('model'),
+                        temperature=llm_cfg['config'].get('temperature')
                     )
                     final_answer = chat_completion.choices[0].message.content
-                except KnowledgeConfig.DoesNotExist:
-                    final_answer = "未找到激活的知识库配置。"
-                    interaction_log.error_message = "未找到激活的知识库配置"
                 except Exception as e_llm:
                     final_answer = f"从 LLM 生成答案时出错: {str(e_llm)}"
                     if interaction_log.error_message:
@@ -416,8 +409,7 @@ class KnowledgeQueryView(APIView):
         except ValueError as ve: 
             response_data = {"error": str(ve)}
             interaction_log.error_message = str(ve)
-            interaction_log.status_code = status.HTTP_500_INTERNAL_SERVER_ERROR # 或 400
-            # return Response(response_data, status=interaction_log.status_code)
+            interaction_log.status_code = status.HTTP_400_BAD_REQUEST
         except Exception as e:
             response_data = {"error": f"查询数据失败: {str(e)}"}
             interaction_log.error_message = str(e)
@@ -482,57 +474,28 @@ class KnowledgeUpdateView(APIView):
         )
         
         try:
-            # 获取知识条目
-            knowledge_item = KnowledgeItem.objects.get(id=item_id)
-            interaction_log.collection = knowledge_item.collection
-            
-            # 更新内容
-            if content is not None:
-                knowledge_item.content = content
-            
-            if metadata is not None:
-                knowledge_item.metadata = metadata
-            
-            knowledge_item.save()
-            
-            # 如果有向量数据库连接，也更新向量数据库
-            if knowledge_item.mem0_item_id:
-                memory_instance = get_or_create_mem0_instance(
-                    knowledge_item.collection.name,
-                    user_id
-                )
-                if memory_instance:
-                    try:
-                        # mem0暂不支持直接更新，需要删除后重新添加
-                        memory_instance.delete(knowledge_item.mem0_item_id)
-                        result = memory_instance.add(
-                            messages=knowledge_item.content,
-                            user_id=user_id,
-                            metadata=knowledge_item.metadata
-                        )
-                        if isinstance(result, dict):
-                            knowledge_item.mem0_item_id = result.get('id')
-                            knowledge_item.save()
-                    except Exception as e:
-                        logger.warning(f"Failed to update vector database: {str(e)}")
-            
+            result = knowledge_service.update_knowledge(
+                item_id=item_id,
+                content=content,
+                metadata=metadata,
+                user_id=user_id
+            )
             response_data = {
                 "message": "Knowledge item updated successfully",
-                "item_id": item_id,
-                "updated_fields": {
-                    "content": content is not None,
-                    "metadata": metadata is not None
-                }
+                **result
             }
-            
             interaction_log.response_payload = response_data
             interaction_log.status_code = status.HTTP_200_OK
+            try:
+                knowledge_item = KnowledgeItem.objects.get(id=item_id)
+                interaction_log.collection = knowledge_item.collection
+            except Exception:
+                pass
             
-        except KnowledgeItem.DoesNotExist:
-            response_data = {"error": f"Knowledge item with id {item_id} does not exist"}
-            interaction_log.error_message = response_data["error"]
-            interaction_log.status_code = status.HTTP_404_NOT_FOUND
-            
+        except ValueError as ve:
+            response_data = {"error": str(ve)}
+            interaction_log.error_message = str(ve)
+            interaction_log.status_code = status.HTTP_404_NOT_FOUND if "不存在" in str(ve) else status.HTTP_400_BAD_REQUEST
         except Exception as e:
             response_data = {"error": f"Failed to update knowledge item: {str(e)}"}
             interaction_log.error_message = str(e)
@@ -583,41 +546,28 @@ class KnowledgeDeleteView(APIView):
         )
         
         try:
-            # 获取知识条目
-            knowledge_item = KnowledgeItem.objects.get(id=item_id)
-            interaction_log.collection = knowledge_item.collection
-            
-            # 如果有向量数据库ID，先从向量数据库删除
-            if knowledge_item.mem0_item_id:
-                memory_instance = get_or_create_mem0_instance(
-                    knowledge_item.collection.name,
-                    user_id
-                )
-                if memory_instance:
-                    try:
-                        memory_instance.delete(knowledge_item.mem0_item_id)
-                        logger.info(f"Deleted from vector database: {knowledge_item.mem0_item_id}")
-                    except Exception as e:
-                        logger.warning(f"Failed to delete from vector database: {str(e)}")
-            
-            # 删除数据库记录
-            collection_name = knowledge_item.collection.name
-            knowledge_item.delete()
-            
+            result = knowledge_service.delete_knowledge(
+                item_id=item_id,
+                user_id=user_id
+            )
             response_data = {
                 "message": "Knowledge item deleted successfully",
-                "item_id": item_id,
-                "collection": collection_name
+                **result
             }
-            
             interaction_log.response_payload = response_data
             interaction_log.status_code = status.HTTP_200_OK
-            
-        except KnowledgeItem.DoesNotExist:
-            response_data = {"error": f"Knowledge item with id {item_id} does not exist"}
-            interaction_log.error_message = response_data["error"]
-            interaction_log.status_code = status.HTTP_404_NOT_FOUND
-            
+            try:
+                collection_name = result.get("collection")
+                if collection_name:
+                    collection_obj = KnowledgeCollection.objects.filter(name=collection_name).first()
+                    if collection_obj:
+                        interaction_log.collection = collection_obj
+            except Exception:
+                pass
+        except ValueError as ve:
+            response_data = {"error": str(ve)}
+            interaction_log.error_message = str(ve)
+            interaction_log.status_code = status.HTTP_404_NOT_FOUND if "不存在" in str(ve) else status.HTTP_400_BAD_REQUEST
         except Exception as e:
             response_data = {"error": f"Failed to delete knowledge item: {str(e)}"}
             interaction_log.error_message = str(e)
@@ -686,7 +636,6 @@ class KnowledgeListView(APIView):
                 'status': item.status,
                 'metadata': item.metadata,
                 'source_identifier': item.source_identifier,
-                'mem0_item_id': item.mem0_item_id,
                 'added_at': item.added_at.isoformat(),
                 'last_accessed_at': item.last_accessed_at.isoformat() if item.last_accessed_at else None
             })
@@ -748,8 +697,7 @@ class KnowledgeBatchAddView(APIView):
             defaults={'description': f'Collection {collection_name}'}
         )
         
-        # 获取mem0实例
-        memory_instance = get_or_create_mem0_instance(collection_name, user_id)
+        collection_name_with_user = f"{collection_name}_{user_id}"
         
         # 批量处理
         success_items = []
@@ -757,54 +705,29 @@ class KnowledgeBatchAddView(APIView):
         
         for idx, item_data in enumerate(items):
             try:
-                # 验证单个条目
                 content = item_data.get('content')
                 if not content:
-                    failed_items.append({
-                        'index': idx,
-                        'error': 'content is required'
-                    })
+                    failed_items.append({'index': idx, 'error': 'content is required'})
                     continue
-                
                 metadata = item_data.get('metadata', {})
                 item_type = item_data.get('item_type', 'text')
                 
-                # 创建知识条目
-                knowledge_item = KnowledgeItem.objects.create(
-                    collection=collection,
+                add_response = knowledge_service.store_knowledge(
                     content=content,
+                    collection_name=collection_name_with_user,
+                    user_id=user_id,
                     metadata=metadata,
-                    item_type=item_type,
-                    status='active'
+                    source=metadata.get('source_identifier', f"batch_add_{int(time.time())}")
                 )
-                
-                # 尝试存储到向量数据库
-                vector_id = None
-                if memory_instance:
-                    try:
-                        result = memory_instance.add(
-                            messages=content,
-                            user_id=user_id,
-                            metadata=metadata
-                        )
-                        if isinstance(result, dict):
-                            vector_id = result.get('id')
-                            knowledge_item.mem0_item_id = vector_id
-                            knowledge_item.save()
-                    except Exception as e:
-                        logger.warning(f"Failed to store item {idx} in vector database: {str(e)}")
                 
                 success_items.append({
                     'index': idx,
-                    'item_id': knowledge_item.id,
-                    'vector_id': vector_id
+                    'item_id': add_response.get('item_id'),
+                    'vector_id': add_response.get('vector_id')
                 })
-                
+            
             except Exception as e:
-                failed_items.append({
-                    'index': idx,
-                    'error': str(e)
-                })
+                failed_items.append({'index': idx, 'error': str(e)})
                 logger.error(f"Failed to process item {idx}: {e}")
         
         # 记录交互
@@ -877,32 +800,21 @@ class KnowledgeBatchDeleteView(APIView):
         
         for item_id in item_ids:
             try:
-                # 获取知识条目
-                knowledge_item = KnowledgeItem.objects.get(id=item_id)
-                collection_name = knowledge_item.collection.name
-                collections_affected.add(collection_name)
-                
-                # 如果有向量数据库ID，先从向量数据库删除
-                if knowledge_item.mem0_item_id:
-                    memory_instance = get_or_create_mem0_instance(collection_name, user_id)
-                    if memory_instance:
-                        try:
-                            memory_instance.delete(knowledge_item.mem0_item_id)
-                        except Exception as e:
-                            logger.warning(f"Failed to delete item {item_id} from vector database: {str(e)}")
-                
-                # 删除数据库记录
-                knowledge_item.delete()
-                
+                result = knowledge_service.delete_knowledge(
+                    item_id=item_id,
+                    user_id=user_id
+                )
+                collection_name = result.get('collection')
+                if collection_name:
+                    collections_affected.add(collection_name)
                 success_items.append({
                     'item_id': item_id,
                     'collection': collection_name
                 })
-                
-            except KnowledgeItem.DoesNotExist:
+            except ValueError as ve:
                 failed_items.append({
                     'item_id': item_id,
-                    'error': 'Item does not exist'
+                    'error': str(ve)
                 })
             except Exception as e:
                 failed_items.append({

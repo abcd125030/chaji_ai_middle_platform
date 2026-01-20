@@ -150,7 +150,7 @@ class KnowledgeItemAdmin(admin.ModelAdmin):
     """知识条目模型的后台管理类"""
     list_display = ('id', 'collection', 'source_identifier', 'status', 'added_at', 'last_accessed_at')
     list_filter = ('status', 'collection')
-    search_fields = ('source_identifier', 'mem0_item_id')
+    search_fields = ('source_identifier', 'content')
     readonly_fields = ('added_at',)
 
 """
