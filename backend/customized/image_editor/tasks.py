@@ -14,8 +14,6 @@ from .aiCallback import AICallback
 from .cache_manager import TaskCacheManager
 from .db_batch_manager import db_optimizer
 from .config_manager import config_manager
-# 导入批量回调任务，确保它们被Celery发现
-from .tasks_batch import trigger_batch_send, send_single_callback, cleanup_stuck_callbacks, check_and_flush_callbacks
 # dotenv load
 from dotenv import load_dotenv
 load_dotenv()

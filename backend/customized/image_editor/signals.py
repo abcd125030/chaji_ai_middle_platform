@@ -3,12 +3,13 @@
 """
 from django.db.models.signals import post_save
 from django.dispatch import receiver
+from .config_models import ImageEditorConfig
 import logging
 
 logger = logging.getLogger(__name__)
 
 
-@receiver(post_save, sender='image_editor.ImageEditorConfig')
+@receiver(post_save, sender=ImageEditorConfig)
 def reload_config_on_save(sender, instance, **kwargs):
     """
     当ImageEditorConfig保存后，通知所有Celery worker重新加载配置
